@@ -7,6 +7,8 @@ import {
   Connection,
   MarkerType,
   ReactFlowProvider,
+  NodeChange,
+  EdgeChange
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -34,8 +36,8 @@ const LineageGraph: React.FC = () => {
     resetView
   } = useLineageData();
   
-  const [, setNodesState, onNodesChange] = useNodesState(nodes);
-  const [, setEdgesState, onEdgesChange] = useEdgesState(edges);
+  const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
+  const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(edges);
   
   // Update the state when nodes or edges change
   React.useEffect(() => {
@@ -45,6 +47,25 @@ const LineageGraph: React.FC = () => {
   React.useEffect(() => {
     setEdgesState(edges);
   }, [edges, setEdgesState]);
+
+  // Ensure node position changes are reflected in the main state
+  const handleNodesChange = useCallback((changes: NodeChange[]) => {
+    onNodesChange(changes);
+    
+    // We'll update the main nodes state with position changes
+    // This is important to persist node positions after dragging
+    changes.forEach(change => {
+      if (change.type === 'position' && change.position) {
+        setNodes(prevNodes => 
+          prevNodes.map(node => 
+            node.id === change.id 
+              ? { ...node, position: change.position }
+              : node
+          )
+        );
+      }
+    });
+  }, [onNodesChange, setNodes]);
 
   const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
   const { 
@@ -99,9 +120,9 @@ const LineageGraph: React.FC = () => {
       
       <ReactFlowProvider>
         <FlowComponent
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
+          nodes={nodesState}
+          edges={edgesState}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           handleNodeClick={handleNodeClick}

@@ -50,7 +50,7 @@ const getNodeTypeClass = (type: string) => {
   }
 };
 
-const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
+const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   const [expanded, setExpanded] = useState(true);
   const [showAllColumns, setShowAllColumns] = useState(false);
   
@@ -66,7 +66,10 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
   const toggleShowAll = () => setShowAllColumns(!showAllColumns);
   
   return (
-    <div className={`shadow-md rounded-lg overflow-hidden ${nodeTypeClass} transition-all duration-200 ${selected ? 'ring-2 ring-primary/40' : ''}`} style={{ minWidth: '240px' }}>
+    <div 
+      className={`shadow-md rounded-lg overflow-hidden ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''}`} 
+      style={{ minWidth: '240px', cursor: 'move' }}
+    >
       {/* Header section */}
       <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
         <div className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">

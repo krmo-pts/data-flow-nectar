@@ -69,6 +69,7 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       snapToGrid={true}
       attributionPosition="bottom-right"
       className="lineage-flow"
+      nodesDraggable={true}  // Explicitly enabling nodes to be draggable
     >
       <FlowBackground />
       <FlowControls />
