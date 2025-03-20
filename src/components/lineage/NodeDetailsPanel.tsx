@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
 import { NodeData, Column, ImpactType } from '@/types/lineage';
-import { X, Target, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { X, Target, ArrowUpCircle, ArrowDownCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -12,13 +12,15 @@ interface NodeDetailsPanelProps {
   onClose: () => void;
   isOpen: boolean;
   onSetFocus?: (nodeId: string) => void;
+  isAnalyzing?: boolean;
 }
 
 const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({ 
   node, 
   onClose,
   isOpen,
-  onSetFocus
+  onSetFocus,
+  isAnalyzing = false
 }) => {
   if (!isOpen || !node) return null;
 
@@ -106,9 +108,19 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
                 size="sm" 
                 onClick={handleSetFocus}
                 className="flex items-center gap-1"
+                disabled={isAnalyzing}
               >
-                <Target size={14} />
-                <span>{node.isFocus ? 'Focused' : 'Set as focus'}</span>
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Target size={14} />
+                    <span>{node.isFocus ? 'Focused' : 'Set as focus'}</span>
+                  </>
+                )}
               </Button>
             )}
           </div>

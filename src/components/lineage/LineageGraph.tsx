@@ -87,7 +87,9 @@ const LineageGraph: React.FC = () => {
     resetPanels();
   }, [resetView, resetPanels]);
 
-  // New function to set focus on a specific node
+  // New function to set focus on a specific node and track analysis state
+  const { isAnalyzing } = useLineageFocus(setNodes, setEdges, {}); // We just need the isAnalyzing state
+  
   const handleSetFocus = useCallback((nodeId: string) => {
     setFocusNode(nodeId);
   }, [setFocusNode]);
@@ -134,6 +136,7 @@ const LineageGraph: React.FC = () => {
         onClose={handleCloseNodePanel} 
         isOpen={isNodePanelOpen} 
         onSetFocus={handleSetFocus}
+        isAnalyzing={isAnalyzing}
       />
       
       <EdgeDetailsPanel 
