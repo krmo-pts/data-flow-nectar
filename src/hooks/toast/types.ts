@@ -1,54 +1,45 @@
 
 import * as React from "react"
-import { ToastActionElement } from "@/components/ui/toast"
 
 export type ToastProps = {
-  id?: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  action?: React.ReactNode
   variant?: "default" | "destructive"
 }
 
-export type ToasterToast = ToastProps & {
+export type ToasterToast = {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
+  action?: React.ReactNode
+  variant?: "default" | "destructive"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export const TOAST_LIMIT = 1
-export const TOAST_REMOVE_DELAY = 1000000
+export type State = {
+  toasts: ToasterToast[]
+}
 
-export const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
-} as const
+export type StateCreator = (state: State) => void
 
-export type ActionType = typeof actionTypes
-
-export type Action =
+export type ToastActionType =
   | {
-      type: ActionType["ADD_TOAST"]
+      type: "ADD_TOAST"
       toast: ToasterToast
     }
   | {
-      type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
+      type: "UPDATE_TOAST"
+      toast: ToasterToast
     }
   | {
-      type: ActionType["DISMISS_TOAST"]
-      toastId?: ToasterToast["id"]
+      type: "DISMISS_TOAST"
+      toastId?: string
     }
   | {
-      type: ActionType["REMOVE_TOAST"]
-      toastId?: ToasterToast["id"]
+      type: "REMOVE_TOAST"
+      toastId?: string
     }
 
-export interface State {
-  toasts: ToasterToast[]
-}
+export type Toast = Omit<ToasterToast, "id">
