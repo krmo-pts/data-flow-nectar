@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState, useTransition, lazy, Suspense } from 'react';
+import React, { useCallback, useState, useTransition } from 'react';
 import {
   useNodesState,
   useEdgesState,
@@ -11,6 +11,7 @@ import { useLineageData } from '@/hooks/useLineageData';
 import { useDetailsPanels } from '@/hooks/useDetailsPanels';
 import { useDragHandler } from '@/hooks/useDragHandler';
 import { useEdgeHandler } from '@/hooks/useEdgeHandler';
+import { useLineageSearch } from '@/hooks/useLineageSearch';
 
 import NodeDetailsPanel from './NodeDetailsPanel';
 import EdgeDetailsPanel from './EdgeDetailsPanel';
@@ -73,70 +74,12 @@ const LineageGraph: React.FC = () => {
     resetPanels
   } = useDetailsPanels();
   
+  // Use our new search hook
+  const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
+  
   const handleSearchQuery = useCallback(() => {
-    setNodes(prevNodes => {
-      // Use the search logic
-      const query = searchQuery.toLowerCase();
-      if (!query) {
-        return prevNodes.map((node) => ({
-          ...node,
-          className: `node-${node.data.type}`,
-        }));
-      }
-      
-      return prevNodes.map((node) => {
-        const data = node.data;
-        const matches = 
-          data.name.toLowerCase().includes(query) ||
-          data.path.toLowerCase().includes(query) ||
-          data.platform.toLowerCase().includes(query) ||
-          data.type.toLowerCase().includes(query) ||
-          data.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-          false;
-        
-        return {
-          ...node,
-          className: matches 
-            ? `node-${data.type} border-primary shadow-md ring-2 ring-primary/20` 
-            : `node-${data.type} opacity-40`,
-        };
-      });
-    });
-    
-    setEdges(prevEdges => {
-      const query = searchQuery.toLowerCase();
-      if (!query) return prevEdges;
-      
-      return prevEdges.map((edge) => {
-        const sourceNode = nodes.find(node => node.id === edge.source);
-        const targetNode = nodes.find(node => node.id === edge.target);
-        
-        const sourceData = sourceNode?.data;
-        const targetData = targetNode?.data;
-        
-        const sourceMatches = 
-          sourceData?.name.toLowerCase().includes(query) ||
-          sourceData?.path.toLowerCase().includes(query) ||
-          sourceData?.platform.toLowerCase().includes(query) ||
-          sourceData?.type.toLowerCase().includes(query) ||
-          sourceData?.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-          false;
-          
-        const targetMatches = 
-          targetData?.name.toLowerCase().includes(query) ||
-          targetData?.path.toLowerCase().includes(query) ||
-          targetData?.platform.toLowerCase().includes(query) ||
-          targetData?.type.toLowerCase().includes(query) ||
-          targetData?.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-          false;
-        
-        return {
-          ...edge,
-          className: sourceMatches || targetMatches ? '' : 'opacity-20',
-        };
-      });
-    });
-  }, [searchQuery, nodes, setNodes, setEdges]);
+    handleSearch(searchQuery);
+  }, [searchQuery, handleSearch]);
 
   const handleResetView = useCallback(() => {
     resetView();

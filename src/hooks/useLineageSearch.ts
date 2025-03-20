@@ -17,6 +17,15 @@ export const useLineageSearch = (
           className: `node-${(node.data as NodeData).type}`,
         }))
       );
+      
+      // Reset edges
+      setEdges(prevEdges => 
+        prevEdges.map(edge => ({
+          ...edge,
+          className: ''
+        }))
+      );
+      
       return;
     }
     
