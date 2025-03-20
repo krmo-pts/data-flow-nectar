@@ -14,9 +14,7 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
-  ChevronUp,
-  ArrowUpRight,
-  ArrowDownRight
+  ChevronUp
 } from 'lucide-react';
 
 const getPlatformIcon = (platform: string) => {
@@ -67,20 +65,6 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
   const toggleExpand = () => setExpanded(!expanded);
   const toggleShowAll = () => setShowAllColumns(!showAllColumns);
   
-  const handleExpandUpstream = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (data.onExpandUpstream) {
-      data.onExpandUpstream(data.id);
-    }
-  };
-
-  const handleExpandDownstream = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (data.onExpandDownstream) {
-      data.onExpandDownstream(data.id);
-    }
-  };
-
   return (
     <div className={`shadow-md rounded-lg overflow-hidden ${nodeTypeClass} transition-all duration-200 ${selected ? 'ring-2 ring-primary/40' : ''}`} style={{ minWidth: '240px' }}>
       {/* Header section */}
@@ -96,26 +80,15 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            title="Expand upstream"
-            onClick={handleExpandUpstream}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors"
-          >
-            <ArrowUpRight size={16} />
-          </button>
-          <button
-            title="Expand downstream" 
-            onClick={handleExpandDownstream}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors"
-          >
-            <ArrowDownRight size={16} />
-          </button>
+        <div className="flex items-center">
           <button 
             onClick={toggleExpand}
             className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors"
           >
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          <button className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors ml-1">
+            <Grid size={16} />
           </button>
         </div>
       </div>

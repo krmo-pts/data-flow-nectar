@@ -34,8 +34,6 @@ export interface NodeData {
   level?: number; // Optional level property for hierarchical layouts
   parentIds?: string[]; // Optional array of parent node IDs
   childIds?: string[]; // Optional array of child node IDs
-  onExpandUpstream?: (nodeId: string) => void; // Handler for expanding upstream nodes
-  onExpandDownstream?: (nodeId: string) => void; // Handler for expanding downstream nodes
 }
 
 export interface EdgeData {
