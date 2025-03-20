@@ -1,5 +1,5 @@
 
-import { Edge, Node, Position } from 'reactflow';
+import { Edge, Node, Position, MarkerType } from 'reactflow';
 import { NodeData, EdgeData } from '@/types/lineage';
 
 /**
@@ -81,7 +81,7 @@ export const calculateInitialLayout = (
       type: 'default',
       data: { ...edge },
       markerEnd: {
-        type: 'arrowclosed',
+        type: MarkerType.ArrowClosed,
         width: 15,
         height: 15,
         color: '#64748b',
