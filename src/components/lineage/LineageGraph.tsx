@@ -171,7 +171,10 @@ const LineageGraph: React.FC = () => {
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearchQuery}
           resetView={handleResetView}
+          resetPanels={resetPanels}
           isDragging={isDragging}
+          setNodes={setNodes}
+          setEdges={setEdges}
         />
       </ReactFlowProvider>
       
