@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Node, Edge } from 'reactflow';
 import { NodeData, EdgeData } from '@/types/lineage';
 import { mockLineageData } from '@/data/mockLineageData';
-import { mockLargeLineageData } from '@/data/mockLargeLineageData';
+import { mockLargeLineageData, mockVeryLargeLineageData } from '@/data/mockLargeLineageData';
 import { calculateInitialLayout } from '@/utils/lineageLayout';
 import { useReactFlow } from 'reactflow';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 export function useLineageData() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-  const [useLargeDataset, setUseLargeDataset] = useState(false);
+  const [datasetSize, setDatasetSize] = useState<'small' | 'large' | 'veryLarge'>('small');
   const [isLoading, setIsLoading] = useState(false);
   const reactFlowInstance = useReactFlow();
   const { toast } = useToast();
@@ -22,7 +22,18 @@ export function useLineageData() {
     // Use setTimeout to allow the UI to update with the loading state
     setTimeout(() => {
       try {
-        const dataToUse = useLargeDataset ? mockLargeLineageData : mockLineageData;
+        let dataToUse;
+        switch (datasetSize) {
+          case 'large':
+            dataToUse = mockLargeLineageData;
+            break;
+          case 'veryLarge':
+            dataToUse = mockVeryLargeLineageData;
+            break;
+          default:
+            dataToUse = mockLineageData;
+        }
+        
         console.log(`Loading ${dataToUse.nodes.length} nodes and ${dataToUse.edges.length} edges`);
         
         const { flowNodes, flowEdges } = calculateInitialLayout(
@@ -34,8 +45,11 @@ export function useLineageData() {
         setEdges(flowEdges);
         
         // Give more time for the layout to stabilize before fitting view
-        // Increase timeout for large dataset
-        const timeoutDuration = useLargeDataset ? 1000 : 300;
+        // Increase timeout for larger datasets
+        let timeoutDuration = 300;
+        if (datasetSize === 'large') timeoutDuration = 1000;
+        if (datasetSize === 'veryLarge') timeoutDuration = 2000;
+        
         setTimeout(() => {
           reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
           setIsLoading(false);
@@ -49,16 +63,16 @@ export function useLineageData() {
         });
         setIsLoading(false);
       }
-    }, useLargeDataset ? 200 : 100); // Increased timeout for large dataset initialization
-  }, [reactFlowInstance, useLargeDataset, toast]);
+    }, datasetSize === 'small' ? 100 : datasetSize === 'large' ? 200 : 300);
+  }, [reactFlowInstance, datasetSize, toast]);
 
   useEffect(() => {
     initialLayout();
-  }, [initialLayout, useLargeDataset]);
+  }, [initialLayout, datasetSize]);
 
-  const toggleDataset = useCallback(() => {
+  const setDatasetSizeHandler = useCallback((size: 'small' | 'large' | 'veryLarge') => {
     if (!isLoading) {
-      setUseLargeDataset(prev => !prev);
+      setDatasetSize(size);
     } else {
       toast({
         title: 'Loading in progress',
@@ -76,9 +90,9 @@ export function useLineageData() {
     setNodes,
     edges,
     setEdges,
-    useLargeDataset,
+    datasetSize,
     isLoading,
-    toggleDataset,
+    setDatasetSize: setDatasetSizeHandler,
     resetView
   };
 }

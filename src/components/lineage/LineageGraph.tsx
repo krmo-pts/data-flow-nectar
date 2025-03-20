@@ -31,9 +31,9 @@ const LineageGraph: React.FC = () => {
     setNodes,
     edges,
     setEdges,
-    useLargeDataset,
+    datasetSize,
     isLoading,
-    toggleDataset,
+    setDatasetSize,
     resetView
   } = useLineageData();
   
@@ -114,10 +114,10 @@ const LineageGraph: React.FC = () => {
 
   return (
     <div className="w-full h-full relative">
-      <LoadingOverlay isVisible={isLoading} useLargeDataset={useLargeDataset} />
+      <LoadingOverlay isVisible={isLoading} datasetSize={datasetSize} />
       <DatasetToggle 
-        useLargeDataset={useLargeDataset} 
-        toggleDataset={toggleDataset} 
+        datasetSize={datasetSize} 
+        setDatasetSize={setDatasetSize} 
         isLoading={isLoading || isPending}
       />
       
