@@ -1,7 +1,7 @@
 
 import { Node, Edge } from 'reactflow';
 import { NodeData, EdgeData } from '@/types/lineage';
-import { createTracingMaps } from './dependencyTracing';
+import { createTracingMaps } from './tracing';
 
 /**
  * Prepares data for lineage processing

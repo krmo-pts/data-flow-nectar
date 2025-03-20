@@ -2,7 +2,7 @@
 import { useCallback, useState } from 'react';
 import { useReactFlow } from 'reactflow';
 import { useToast } from '@/hooks/use-toast';
-import { createTracingMaps, traceLineageDependencies } from '@/utils/lineage/dependencyTracing';
+import { traceLineageDependencies } from '@/utils/lineage/tracing';
 import { 
   prepareLineageProcessing, 
   applyLineageChanges,
