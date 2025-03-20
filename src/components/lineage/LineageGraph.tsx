@@ -29,6 +29,7 @@ import ControlPanel from './ControlPanel';
 import { mockLineageData } from '@/data/mockLineageData';
 import { calculateInitialLayout } from '@/utils/lineageLayout';
 import { useLineageSearch } from '@/hooks/useLineageSearch';
+import { useDetailsPanels } from '@/hooks/useDetailsPanels';
 
 const nodeTypes: NodeTypes = {
   default: BaseNode,
@@ -41,14 +42,21 @@ const edgeTypes: EdgeTypes = {
 const LineageGraph: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [selectedEdge, setSelectedEdge] = useState<EdgeData | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isNodePanelOpen, setIsNodePanelOpen] = useState(false);
-  const [isEdgePanelOpen, setIsEdgePanelOpen] = useState(false);
 
   const reactFlowInstance = useReactFlow();
   const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
+  const { 
+    selectedNode,
+    selectedEdge,
+    isNodePanelOpen,
+    isEdgePanelOpen,
+    handleNodeClick,
+    handleEdgeClick,
+    handleCloseNodePanel,
+    handleCloseEdgePanel,
+    resetPanels
+  } = useDetailsPanels();
   
   const initialLayout = useCallback(() => {
     const { flowNodes, flowEdges } = calculateInitialLayout(
@@ -89,30 +97,6 @@ const LineageGraph: React.FC = () => {
     [setEdges]
   );
 
-  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    const nodeData = mockLineageData.nodes.find(n => n.id === node.id) || null;
-    setSelectedNode(nodeData);
-    setSelectedEdge(null);
-    setIsNodePanelOpen(true);
-    setIsEdgePanelOpen(false);
-  }, []);
-
-  const onEdgeClick = useCallback((_: React.MouseEvent, edge: Edge) => {
-    const edgeData = mockLineageData.edges.find(e => e.id === edge.id) || null;
-    setSelectedEdge(edgeData);
-    setSelectedNode(null);
-    setIsNodePanelOpen(false);
-    setIsEdgePanelOpen(true);
-  }, []);
-
-  const handleCloseNodePanel = useCallback(() => {
-    setIsNodePanelOpen(false);
-  }, []);
-
-  const handleCloseEdgePanel = useCallback(() => {
-    setIsEdgePanelOpen(false);
-  }, []);
-
   const handleSearchQuery = useCallback(() => {
     handleSearch(searchQuery);
   }, [searchQuery, handleSearch]);
@@ -120,11 +104,8 @@ const LineageGraph: React.FC = () => {
   const resetView = useCallback(() => {
     initialLayout();
     setSearchQuery('');
-    setSelectedNode(null);
-    setSelectedEdge(null);
-    setIsNodePanelOpen(false);
-    setIsEdgePanelOpen(false);
-  }, [initialLayout]);
+    resetPanels();
+  }, [initialLayout, resetPanels]);
 
   return (
     <div className="w-full h-full relative">
@@ -134,8 +115,8 @@ const LineageGraph: React.FC = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onEdgeClick={onEdgeClick}
+        onNodeClick={handleNodeClick}
+        onEdgeClick={handleEdgeClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
