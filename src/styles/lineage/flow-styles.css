@@ -2,6 +2,7 @@
 /* Improved performance for panning/zooming operations */
 .react-flow__pane {
   cursor: grab;
+  contain: layout style paint; /* Optimize rendering */
 }
 
 .react-flow__pane.dragging {
@@ -12,6 +13,9 @@
 .react-flow__viewport {
   will-change: transform;
   transform-style: flat;
+  backface-visibility: hidden; /* Prevent repaints */
+  perspective: 1000;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Disable transitions for better performance */
@@ -23,4 +27,22 @@
 .react-flow__handle {
   pointer-events: all !important;
   z-index: 10 !important;
+}
+
+/* Optimize edge rendering */
+.react-flow__edge {
+  contain: layout style; /* Optimize rendering */
+  will-change: transform;
+}
+
+/* Enhance performance for large graphs */
+.react-flow .lineage-flow.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* Optimize edge rendering during dragging */
+.react-flow .lineage-flow.is-dragging .react-flow__edge {
+  transition: none !important;
+  animation: none !important;
 }

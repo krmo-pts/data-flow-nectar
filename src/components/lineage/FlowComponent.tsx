@@ -1,6 +1,6 @@
 
-import React, { memo, useEffect, useMemo } from 'react';
-import { ReactFlow, Connection, Node, Edge } from 'reactflow';
+import React, { memo, useEffect, useMemo, useCallback } from 'react';
+import { ReactFlow, Connection, Node, Edge, useReactFlow } from 'reactflow';
 
 import { nodeTypes, edgeTypes } from './flow/FlowTypeDefinitions';
 import { useFlowOptions } from './flow/FlowOptions';
@@ -44,13 +44,26 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
 }) => {
   // Get ReactFlow options
   const rfOptions = useFlowOptions();
+  const reactFlowInstance = useReactFlow();
   
   // Use memo for edges to prevent unnecessary recalculations
   const memoizedEdges = useMemo(() => edges, [edges]);
   const memoizedNodes = useMemo(() => nodes, [nodes]);
   
   // Optimize edges rendering based on zoom level and dragging state
-  const { visibleEdges } = useEdgeOptimizer(memoizedEdges, memoizedNodes, isDragging);
+  const { visibleEdges, zoom } = useEdgeOptimizer(memoizedEdges, memoizedNodes, isDragging);
+
+  // Update the container class based on zoom level
+  useEffect(() => {
+    const container = document.querySelector('.react-flow');
+    if (container) {
+      if (zoom < 0.5) {
+        container.classList.add('zoomed-out');
+      } else {
+        container.classList.remove('zoomed-out');
+      }
+    }
+  }, [zoom]);
 
   return (
     <ReactFlow

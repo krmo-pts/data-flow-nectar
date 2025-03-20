@@ -50,6 +50,8 @@
   min-width: 240px;
   cursor: pointer;
   overflow: visible !important;
+  contain: layout style; /* Optimize rendering */
+  will-change: transform;
 }
 
 /* Explicitly ensure node content doesn't clip the buttons */
@@ -74,6 +76,7 @@
 .react-flow__node {
   will-change: transform;
   overflow: visible !important; /* Ensure this is always applied */
+  backface-visibility: hidden;
 }
 
 .react-flow__node * {
@@ -82,7 +85,7 @@
 
 /* Optimize node appearance during dragging */
 .lineage-flow.is-dragging .react-flow__node:not(.dragging) {
-  opacity: 0.6;
+  opacity: 0.4; /* More faded for better focus on dragged node */
   transition: none; /* Remove transition to improve performance */
 }
 
@@ -107,4 +110,16 @@
 .lineage-flow button {
   z-index: 10;
   pointer-events: all;
+}
+
+/* Hide node details at lower zoom levels */
+@media (hover: hover) {
+  .lineage-flow .react-flow__node[style*="scale(0.7)"] .node-details,
+  .lineage-flow .react-flow__node[style*="scale(0.6)"] .node-details,
+  .lineage-flow .react-flow__node[style*="scale(0.5)"] .node-details,
+  .lineage-flow .react-flow__node[style*="scale(0.4)"] .node-details,
+  .lineage-flow .react-flow__node[style*="scale(0.3)"] .node-details,
+  .lineage-flow .react-flow__node[style*="scale(0.2)"] .node-details {
+    display: none !important;
+  }
 }
