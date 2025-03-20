@@ -8,7 +8,8 @@ import {
   MarkerType,
   ReactFlowProvider,
   NodeChange,
-  EdgeChange
+  EdgeChange,
+  NodePositionChange
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -56,31 +57,25 @@ const LineageGraph: React.FC = () => {
     onNodesChange(changes);
     
     // Find position changes to detect dragging
-    const positionChange = changes.find(change => 
-      change.type === 'position'
+    const positionChange = changes.find(
+      (change): change is NodePositionChange => change.type === 'position'
     );
     
-    // If we have a position change, check its dragging status safely
-    if (positionChange && positionChange.type === 'position') {
-      // Using optional chaining to safely access the dragging property
-      const isDraggingNow = !!positionChange.dragging;
-      setIsDragging(isDraggingNow);
+    // If we have a position change, check its dragging status
+    if (positionChange) {
+      setIsDragging(!!positionChange.dragging);
       
       // Only update the main state after drag completes
-      if (!isDraggingNow) {
+      if (!positionChange.dragging && positionChange.position) {
         startTransition(() => {
           // Update node positions in the main state
-          changes.forEach(change => {
-            if (change.type === 'position' && change.position) {
-              setNodes(prevNodes => 
-                prevNodes.map(node => 
-                  node.id === change.id 
-                    ? { ...node, position: change.position || node.position }
-                    : node
-                )
-              );
-            }
-          });
+          setNodes(prevNodes => 
+            prevNodes.map(node => 
+              node.id === positionChange.id 
+                ? { ...node, position: positionChange.position || node.position }
+                : node
+            )
+          );
         });
       }
     }
