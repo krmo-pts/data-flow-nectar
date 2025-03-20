@@ -34,6 +34,7 @@ export interface NodeData {
   level?: number; // Optional level property for hierarchical layouts
   parentIds?: string[]; // Optional array of parent node IDs
   childIds?: string[]; // Optional array of child node IDs
+  isFocus?: boolean; // New property to mark this as the focus node
 }
 
 export interface EdgeData {

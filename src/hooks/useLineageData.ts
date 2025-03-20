@@ -109,6 +109,38 @@ export function useLineageData() {
     initialLayout();
   }, [initialLayout]);
 
+  // New function to set a focus node
+  const setFocusNode = useCallback((nodeId: string) => {
+    setNodes(prevNodes => {
+      return prevNodes.map(node => {
+        // First, clear focus from all nodes
+        const newData = { ...node.data, isFocus: false };
+        
+        // Then set focus on the selected node
+        if (node.id === nodeId) {
+          newData.isFocus = true;
+          
+          // Zoom to the focused node
+          setTimeout(() => {
+            reactFlowInstance.setCenter(node.position.x, node.position.y, { duration: 800, zoom: 1.5 });
+          }, 50);
+        }
+        
+        return {
+          ...node,
+          data: newData,
+          className: `node-${node.data.type} ${nodeId === node.id ? 'focus-node' : ''}`
+        };
+      });
+    });
+    
+    // Notify user
+    toast({
+      title: 'Focus set',
+      description: `Focusing on node ${nodeId}`,
+    });
+  }, [setNodes, reactFlowInstance, toast]);
+
   return {
     nodes,
     setNodes,
@@ -117,6 +149,7 @@ export function useLineageData() {
     datasetSize,
     isLoading,
     setDatasetSize: setDatasetSizeHandler,
-    resetView
+    resetView,
+    setFocusNode
   };
 }

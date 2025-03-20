@@ -31,7 +31,8 @@ const LineageGraph: React.FC = () => {
     datasetSize,
     isLoading,
     setDatasetSize,
-    resetView
+    resetView,
+    setFocusNode
   } = useLineageData();
   
   const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
@@ -143,6 +144,11 @@ const LineageGraph: React.FC = () => {
     resetPanels();
   }, [resetView, resetPanels]);
 
+  // New function to set focus on a specific node
+  const handleSetFocus = useCallback((nodeId: string) => {
+    setFocusNode(nodeId);
+  }, [setFocusNode]);
+
   // Determine if we should show the dragging overlay
   const showDraggingOverlay = isDragging && 
     (datasetSize === 'large' || datasetSize === 'veryLarge') && 
@@ -184,6 +190,7 @@ const LineageGraph: React.FC = () => {
         node={selectedNode} 
         onClose={handleCloseNodePanel} 
         isOpen={isNodePanelOpen} 
+        onSetFocus={handleSetFocus}
       />
       
       <EdgeDetailsPanel 

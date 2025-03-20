@@ -46,3 +46,21 @@
   transition: none !important;
   animation: none !important;
 }
+
+/* Focus node styling */
+.focus-node {
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4) !important;
+  z-index: 50 !important; /* Ensure focus node appears on top */
+  transform: scale(1.05); /* Slightly larger */
+}
+
+.focus-node::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 8px 10px 8px;
+  border-style: solid;
+  border-color: transparent transparent rgba(56, 189, 248, 0.6) transparent;
+}

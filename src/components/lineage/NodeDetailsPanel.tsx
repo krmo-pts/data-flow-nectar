@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
 import { NodeData, Column } from '@/types/lineage';
-import { X } from 'lucide-react';
+import { X, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -11,12 +11,14 @@ interface NodeDetailsPanelProps {
   node: NodeData | null;
   onClose: () => void;
   isOpen: boolean;
+  onSetFocus?: (nodeId: string) => void;
 }
 
 const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({ 
   node, 
   onClose,
-  isOpen 
+  isOpen,
+  onSetFocus
 }) => {
   if (!isOpen || !node) return null;
 
@@ -56,6 +58,12 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
     }
   };
 
+  const handleSetFocus = () => {
+    if (onSetFocus && node) {
+      onSetFocus(node.id);
+    }
+  };
+
   return (
     <div className={`node-details-panel ${isOpen ? 'open' : 'closed'} glass-panel`}>
       <div className="flex items-center justify-between mb-4">
@@ -67,7 +75,20 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
       
       <div className="space-y-6">
         <div>
-          <h3 className="text-2xl font-bold mb-2 text-foreground">{node.name}</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-2xl font-bold text-foreground">{node.name}</h3>
+            {onSetFocus && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSetFocus}
+                className="flex items-center gap-1"
+              >
+                <Target size={14} />
+                <span>{node.isFocus ? 'Focused' : 'Set as focus'}</span>
+              </Button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2 mb-2">
             <Badge variant="outline" className={getTypeColor(node.type)}>
               {node.type}

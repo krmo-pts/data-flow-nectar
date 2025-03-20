@@ -75,9 +75,12 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
     });
   }, [data.id, setEdges]);
   
+  // Add focus node class if this is the focus node
+  const focusNodeClass = data.isFocus ? 'focus-node' : '';
+  
   return (
     <div 
-      className={`shadow-md rounded-lg overflow-visible ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''}`} 
+      className={`shadow-md rounded-lg overflow-visible ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''} ${focusNodeClass}`} 
       style={{ 
         minWidth: '240px', 
         cursor: 'move'
