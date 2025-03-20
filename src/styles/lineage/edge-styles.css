@@ -50,6 +50,21 @@
   shape-rendering: optimizeSpeed; /* Optimize SVG rendering speed */
 }
 
+/* Impact path edge styling */
+.impact-path-edge path {
+  stroke-width: 2.5 !important;
+  opacity: 1 !important;
+}
+
+/* Upstream/downstream edge styling */
+.impact-path-edge.upstream path {
+  stroke: #3b82f6 !important; /* Blue for upstream */
+}
+
+.impact-path-edge.downstream path {
+  stroke: #ef4444 !important; /* Red for downstream */
+}
+
 /* Ensure node wrapper does not clip child elements */
 .react-flow__node-default,
 .react-flow__node {

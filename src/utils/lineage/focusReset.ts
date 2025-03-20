@@ -40,6 +40,7 @@ export const resetImpactAnalysis = (
         ...edge,
         data: { ...edge.data, isImpactPath: false },
         animated: false,
+        className: '',
         style: { ...edge.style, strokeWidth: 1.5, opacity: 0.8 }
       };
     });
