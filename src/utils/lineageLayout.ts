@@ -69,20 +69,70 @@ export const calculateInitialLayout = (
     nodesByLevel.get(level).push(nodeId);
   });
   
+  // Improved sorting to minimize edge crossings
+  const sortNodesInLevel = (level: number, prevLevelNodes: string[] | null) => {
+    const nodesInLevel = nodesByLevel.get(level) || [];
+    
+    if (!prevLevelNodes || prevLevelNodes.length === 0 || nodesInLevel.length <= 1) {
+      return nodesInLevel;
+    }
+    
+    // Calculate average position of connected nodes from previous level
+    const nodePositionWeights = new Map<string, number>();
+    
+    nodesInLevel.forEach(nodeId => {
+      const connected = incomingEdges.get(nodeId) || [];
+      let sum = 0;
+      let count = 0;
+      
+      connected.forEach(sourceId => {
+        const sourceIndex = prevLevelNodes.indexOf(sourceId);
+        if (sourceIndex !== -1) {
+          sum += sourceIndex;
+          count++;
+        }
+      });
+      
+      // If node is connected to previous level, assign a weight based on connected nodes' positions
+      // If not connected, we'll position it at the end
+      if (count > 0) {
+        nodePositionWeights.set(nodeId, sum / count);
+      } else {
+        nodePositionWeights.set(nodeId, prevLevelNodes.length);
+      }
+    });
+    
+    // Sort nodes based on their weights (average position of connected nodes)
+    return [...nodesInLevel].sort((a, b) => {
+      const weightA = nodePositionWeights.get(a) || 0;
+      const weightB = nodePositionWeights.get(b) || 0;
+      return weightA - weightB;
+    });
+  };
+  
   // Sort nodes within each level to minimize edge crossings
   const sortedLevels = Array.from(nodesByLevel.keys()).sort((a, b) => a - b);
+  const sortedNodesByLevel = new Map();
   
-  // Improved layout configuration
-  const levelWidth = 350; // Increased horizontal spacing between levels
-  const nodeHeight = 150; // Increased estimated node height
+  // For each level, sort nodes based on connections to previous level
+  let prevLevelNodes = null;
+  for (const level of sortedLevels) {
+    const sortedNodes = sortNodesInLevel(level, prevLevelNodes);
+    sortedNodesByLevel.set(level, sortedNodes);
+    prevLevelNodes = sortedNodes;
+  }
+  
+  // Improved layout configuration with more spacing
+  const levelWidth = 400; // Increased horizontal spacing between levels
+  const nodeHeight = 150; // Estimated node height
   const nodeWidth = 250; // Estimated node width
-  const nodePaddingY = 80; // Vertical padding between nodes
+  const nodePaddingY = 100; // Increased vertical padding between nodes
   
   // Position nodes based on their level and order
   const nodePositions: Record<string, { x: number; y: number }> = {};
   
   sortedLevels.forEach((level) => {
-    const nodesInLevel = nodesByLevel.get(level) || [];
+    const nodesInLevel = sortedNodesByLevel.get(level) || [];
     const levelHeight = nodesInLevel.length * (nodeHeight + nodePaddingY) - nodePaddingY;
     const startY = -levelHeight / 2; // Center vertically
     

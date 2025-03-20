@@ -10,7 +10,6 @@ import {
   addEdge,
   Connection,
   Edge,
-  Node,
   useReactFlow,
   NodeTypes,
   EdgeTypes,
@@ -69,8 +68,8 @@ const LineageGraph: React.FC = () => {
     
     // Give more time for the layout to stabilize before fitting view
     setTimeout(() => {
-      reactFlowInstance.fitView({ padding: 0.3, includeHiddenNodes: false });
-    }, 200);
+      reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
+    }, 300);
   }, [reactFlowInstance, setEdges, setNodes]);
 
   useEffect(() => {
