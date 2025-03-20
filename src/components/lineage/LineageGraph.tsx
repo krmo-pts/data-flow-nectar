@@ -12,6 +12,7 @@ import { useDetailsPanels } from '@/hooks/useDetailsPanels';
 import { useDragHandler } from '@/hooks/useDragHandler';
 import { useEdgeHandler } from '@/hooks/useEdgeHandler';
 import { useLineageSearch } from '@/hooks/useLineageSearch';
+import { useLineageFocus } from '@/hooks/useLineageFocus'; // Properly import the hook
 
 import NodeDetailsPanel from './NodeDetailsPanel';
 import EdgeDetailsPanel from './EdgeDetailsPanel';
@@ -87,8 +88,8 @@ const LineageGraph: React.FC = () => {
     resetPanels();
   }, [resetView, resetPanels]);
 
-  // New function to set focus on a specific node and track analysis state
-  const { isAnalyzing } = useLineageFocus(setNodes, setEdges, {}); // We just need the isAnalyzing state
+  // Use the existing useLineageFocus hook
+  const { isAnalyzing } = useLineageFocus(setNodes, setEdges, {});
   
   const handleSetFocus = useCallback((nodeId: string) => {
     setFocusNode(nodeId);
