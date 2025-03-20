@@ -26,115 +26,112 @@ export const useLineageTracing = ({ nodeId }: UseLineageTracingProps) => {
     // For extremely large graphs, implement chunking
     const isLargeGraph = edges.length > 300 || nodes.length > 150;
     
-    // Start with collecting affected node and edge IDs
-    const processInitialBatch = () => {
-      const visitedNodeIds = new Set<string>([nodeId]);
-      const affectedNodeIds = new Set<string>();
-      const affectedEdgeIds = new Set<string>();
-      const nodesToProcess = new Set<string>();
+    // Build node connection maps for tracing
+    const incomingMap = new Map<string, string[]>();
+    const outgoingMap = new Map<string, string[]>();
+    
+    // Initialize maps
+    nodes.forEach(node => {
+      incomingMap.set(node.id, []);
+      outgoingMap.set(node.id, []);
+    });
+    
+    // Fill maps with connections
+    edges.forEach(edge => {
+      const { source, target } = edge;
       
-      // Initial batch - find direct connections only
-      const connectedEdges = edges.filter(edge => 
-        direction === 'incoming' ? edge.target === nodeId : edge.source === nodeId
-      );
-      
-      for (const edge of connectedEdges) {
-        affectedEdgeIds.add(edge.id);
-        
-        // Get the connected node id
-        const connectedNodeId = direction === 'incoming' ? edge.source : edge.target;
-        affectedNodeIds.add(connectedNodeId);
-        
-        // Add to queue for further processing if this is a large graph
-        if (!visitedNodeIds.has(connectedNodeId)) {
-          nodesToProcess.add(connectedNodeId);
-        }
+      // Add to outgoing map
+      if (outgoingMap.has(source)) {
+        const connections = outgoingMap.get(source) || [];
+        outgoingMap.set(source, [...connections, target]);
       }
       
-      // Apply immediate changes for direct connections
-      applyChanges(affectedNodeIds, affectedEdgeIds);
+      // Add to incoming map
+      if (incomingMap.has(target)) {
+        const connections = incomingMap.get(target) || [];
+        incomingMap.set(target, [...connections, source]);
+      }
+    });
+    
+    // Recursive function to trace dependencies in either direction
+    const traceDependencies = (
+      currentNodeId: string,
+      visitedNodes: Set<string>,
+      affectedNodeIds: Set<string>,
+      affectedEdgeIds: Set<string>,
+      traceDirection: 'incoming' | 'outgoing',
+      depth: number = 0,
+      maxDepth: number = 15
+    ) => {
+      // Stop recursion if we've visited this node before or reached max depth
+      if (visitedNodes.has(currentNodeId) || depth > maxDepth) return;
+      visitedNodes.add(currentNodeId);
       
-      // If it's a large graph, continue processing in chunks
-      if (isLargeGraph && nodesToProcess.size > 0) {
-        // Show a toast for large graphs
-        toast({
-          title: shouldHide ? "Hiding lineage..." : "Showing lineage...",
-          description: `Processing ${direction === 'incoming' ? 'upstream' : 'downstream'} connections in batches.`
-        });
+      // Get connections based on direction
+      const connections = traceDirection === 'incoming' 
+        ? incomingMap.get(currentNodeId) || []
+        : outgoingMap.get(currentNodeId) || [];
+      
+      for (const connectedNodeId of connections) {
+        // Add to affected nodes
+        affectedNodeIds.add(connectedNodeId);
         
-        // Continue with the rest in chunks
-        processInChunks(Array.from(nodesToProcess), visitedNodeIds, new Set(affectedNodeIds), new Set(affectedEdgeIds));
-      } else {
-        setIsProcessingLineage(false);
+        // Add edge to affected edges
+        const edgeId = traceDirection === 'incoming'
+          ? `${connectedNodeId}->${currentNodeId}` // Source to target
+          : `${currentNodeId}->${connectedNodeId}`; // Source to target
+        
+        // Find the actual edge ID from the edges array
+        const edge = edges.find(e => 
+          (e.source === connectedNodeId && e.target === currentNodeId && traceDirection === 'incoming') ||
+          (e.source === currentNodeId && e.target === connectedNodeId && traceDirection === 'outgoing')
+        );
+        
+        if (edge) {
+          affectedEdgeIds.add(edge.id);
+        }
+        
+        // Continue tracing recursively
+        traceDependencies(
+          connectedNodeId,
+          visitedNodes,
+          affectedNodeIds,
+          affectedEdgeIds,
+          traceDirection,
+          depth + 1,
+          maxDepth
+        );
       }
     };
     
-    // Process remaining nodes in chunks to avoid UI freeze
-    const processInChunks = (
-      remainingNodes: string[],
-      visitedNodeIds: Set<string>,
-      affectedNodeIds: Set<string>,
-      affectedEdgeIds: Set<string>,
-      depth: number = 1,
-      maxDepth: number = 5
-    ) => {
-      // Stop recursion when we reach max depth or have no more nodes
-      if (depth > maxDepth || remainingNodes.length === 0) {
-        applyChanges(affectedNodeIds, affectedEdgeIds);
-        setIsProcessingLineage(false);
-        return;
-      }
+    // Start processing
+    const processLineage = () => {
+      const visitedNodeIds = new Set<string>();
+      const affectedNodeIds = new Set<string>();
+      const affectedEdgeIds = new Set<string>();
       
-      // Process a chunk of nodes (limit to 20 nodes per chunk)
-      const chunkSize = 20;
-      const currentChunk = remainingNodes.slice(0, chunkSize);
-      const newNodesToProcess = new Set<string>();
+      // Start tracing from the selected node
+      traceDependencies(
+        nodeId,
+        visitedNodeIds,
+        affectedNodeIds,
+        affectedEdgeIds,
+        direction
+      );
       
-      // Process current chunk
-      for (const currentNodeId of currentChunk) {
-        if (visitedNodeIds.has(currentNodeId)) continue;
-        visitedNodeIds.add(currentNodeId);
+      // If it's a large graph, process in chunks
+      if (isLargeGraph && affectedNodeIds.size > 50) {
+        // Show a toast for large graphs
+        toast({
+          title: shouldHide ? "Hiding lineage..." : "Showing lineage...",
+          description: `Processing ${direction === 'incoming' ? 'upstream' : 'downstream'} connections in batches (${affectedNodeIds.size} nodes).`
+        });
         
-        const connectedEdges = edges.filter(edge => 
-          direction === 'incoming' ? edge.target === currentNodeId : edge.source === currentNodeId
-        );
-        
-        for (const edge of connectedEdges) {
-          affectedEdgeIds.add(edge.id);
-          
-          // Get the connected node id
-          const connectedNodeId = direction === 'incoming' ? edge.source : edge.target;
-          affectedNodeIds.add(connectedNodeId);
-          
-          // Queue for next chunk if not already visited
-          if (!visitedNodeIds.has(connectedNodeId)) {
-            newNodesToProcess.add(connectedNodeId);
-          }
-        }
-      }
-      
-      // Apply current chunk's changes
-      applyChanges(affectedNodeIds, affectedEdgeIds);
-      
-      // Prepare the next chunk and continue
-      const nextRemainingNodes = [
-        ...remainingNodes.slice(chunkSize), 
-        ...Array.from(newNodesToProcess)
-      ];
-      
-      // Continue with next chunk after a small delay
-      if (nextRemainingNodes.length > 0 && depth < maxDepth) {
-        setTimeout(() => {
-          processInChunks(
-            nextRemainingNodes,
-            visitedNodeIds,
-            affectedNodeIds,
-            affectedEdgeIds,
-            depth + 1,
-            maxDepth
-          );
-        }, 50);
+        // Apply changes in chunks
+        applyChangesInChunks(Array.from(affectedNodeIds), Array.from(affectedEdgeIds));
       } else {
+        // Apply changes directly for smaller graphs
+        applyChanges(affectedNodeIds, affectedEdgeIds);
         setIsProcessingLineage(false);
       }
     };
@@ -168,8 +165,38 @@ export const useLineageTracing = ({ nodeId }: UseLineageTracingProps) => {
       });
     };
     
-    // Start processing
-    processInitialBatch();
+    // Process changes in chunks for large graphs
+    const applyChangesInChunks = (nodeIds: string[], edgeIds: string[], chunkSize: number = 50) => {
+      let nodeIndex = 0;
+      let edgeIndex = 0;
+      
+      const processNextChunk = () => {
+        // Process a chunk of nodes
+        const nodeChunk = new Set(nodeIds.slice(nodeIndex, nodeIndex + chunkSize));
+        nodeIndex += chunkSize;
+        
+        // Process a chunk of edges
+        const edgeChunk = new Set(edgeIds.slice(edgeIndex, edgeIndex + chunkSize));
+        edgeIndex += chunkSize;
+        
+        // Apply the current chunk
+        applyChanges(nodeChunk, edgeChunk);
+        
+        // If there are more items to process, schedule the next chunk
+        if (nodeIndex < nodeIds.length || edgeIndex < edgeIds.length) {
+          setTimeout(processNextChunk, 10);
+        } else {
+          setIsProcessingLineage(false);
+        }
+      };
+      
+      // Start processing
+      processNextChunk();
+    };
+    
+    // Start the lineage tracing
+    processLineage();
+    
   }, [getEdges, getNodes, nodeId, setEdges, setNodes, toast]);
 
   return {
