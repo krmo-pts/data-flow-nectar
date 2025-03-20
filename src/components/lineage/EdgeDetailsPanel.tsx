@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import { EdgeData } from '@/types/lineage';
 import { X } from 'lucide-react';
@@ -99,13 +98,6 @@ const EdgeDetailsPanel: React.FC<EdgeDetailsPanelProps> = ({
                   {edge.target}
                 </code>
               </div>
-              
-              {edge.description && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Description</h4>
-                  <p className="text-sm">{edge.description}</p>
-                </div>
-              )}
               
               {edge.metadata && Object.keys(edge.metadata).length > 0 && (
                 <div>
