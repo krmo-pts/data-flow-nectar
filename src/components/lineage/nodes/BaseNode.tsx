@@ -17,23 +17,31 @@ import {
   ChevronUp
 } from 'lucide-react';
 
+// Memoize icon components to prevent re-renders
+const PlatformIcons = {
+  database: memo(() => <Database className="h-4 w-4" />),
+  chart: memo(() => <BarChart3 className="h-4 w-4" />),
+  cloud: memo(() => <Cloud className="h-4 w-4" />),
+  server: memo(() => <Server className="h-4 w-4" />)
+};
+
 const getPlatformIcon = (platform: string) => {
   switch (platform) {
     case 'postgres':
     case 'oracle':
     case 'mysql':
     case 'snowflake':
-      return <Database className="h-4 w-4" />;
+      return <PlatformIcons.database />;
     case 'tableau':
     case 'powerbi':
     case 'looker':
-      return <BarChart3 className="h-4 w-4" />;
+      return <PlatformIcons.chart />;
     case 'azure':
     case 'aws':
     case 'gcp':
-      return <Cloud className="h-4 w-4" />;
+      return <PlatformIcons.cloud />;
     default:
-      return <Server className="h-4 w-4" />;
+      return <PlatformIcons.server />;
   }
 };
 
@@ -50,6 +58,14 @@ const getNodeTypeClass = (type: string) => {
   }
 };
 
+// Column component to improve rendering performance
+const Column = memo(({ name, type }: { name: string, type: string }) => (
+  <div className="flex items-center justify-between px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800">
+    <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{name}</span>
+    <span className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400">{type}</span>
+  </div>
+));
+
 const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   const [expanded, setExpanded] = useState(true);
   const [showAllColumns, setShowAllColumns] = useState(false);
@@ -62,13 +78,28 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   const visibleColumns = expanded ? columns.slice(0, maxVisibleColumns) : [];
   const hiddenColumnsCount = columns.length - visibleColumns.length;
   
-  const toggleExpand = () => setExpanded(!expanded);
-  const toggleShowAll = () => setShowAllColumns(!showAllColumns);
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent node selection when toggling
+    setExpanded(!expanded);
+  };
+  
+  const toggleShowAll = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent node selection when toggling
+    setShowAllColumns(!showAllColumns);
+  };
+  
+  // Optimize rendering for dragging
+  const shouldRenderColumns = expanded && !dragging;
   
   return (
     <div 
       className={`shadow-md rounded-lg overflow-hidden ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''}`} 
-      style={{ minWidth: '240px', cursor: 'move' }}
+      style={{ 
+        minWidth: '240px', 
+        cursor: 'move',
+        // Add will-change to optimize for GPU acceleration during dragging
+        willChange: dragging ? 'transform' : 'auto'
+      }}
     >
       {/* Header section */}
       <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
@@ -90,22 +121,22 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
           >
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
-          <button className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors ml-1">
+          <button 
+            className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors ml-1"
+            onClick={(e) => e.stopPropagation()} // Prevent node selection
+          >
             <Grid size={16} />
           </button>
         </div>
       </div>
       
-      {/* Columns section */}
-      {expanded && (
+      {/* Columns section - only render when not dragging for better performance */}
+      {shouldRenderColumns && (
         <div className="bg-white dark:bg-gray-900">
           {visibleColumns.length > 0 ? (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {visibleColumns.map((column, index) => (
-                <div key={index} className="flex items-center justify-between px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{column.name}</span>
-                  <span className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400">{column.type}</span>
-                </div>
+                <Column key={index} name={column.name} type={column.type} />
               ))}
             </div>
           ) : (

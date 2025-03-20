@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { ReactFlow, Connection } from 'reactflow';
 
 import { nodeTypes, edgeTypes } from './flow/FlowTypeDefinitions';
@@ -19,6 +19,7 @@ interface FlowComponentProps {
   setSearchQuery: (query: string) => void;
   handleSearch: () => void;
   resetView: () => void;
+  isDragging?: boolean;
 }
 
 const FlowComponent: React.FC<FlowComponentProps> = ({
@@ -33,17 +34,25 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
   setSearchQuery,
   handleSearch,
   resetView,
+  isDragging = false,
 }) => {
   // Get ReactFlow options
   const rfOptions = useFlowOptions();
   
-  // Optimize edges rendering based on zoom level
-  const { visibleEdges, zoom } = useEdgeOptimizer(edges, nodes);
+  // Optimize edges rendering based on zoom level and dragging state
+  const { visibleEdges, zoom } = useEdgeOptimizer(edges, nodes, isDragging);
+
+  // Determine which edges to show
+  const edgesToRender = isDragging && edges.length > 100 
+    ? visibleEdges // During dragging, show minimal edges
+    : zoom < 0.5 && edges.length > 100 
+      ? visibleEdges // When zoomed out with many edges, filter
+      : edges; // Otherwise show all edges
 
   return (
     <ReactFlow
       nodes={nodes}
-      edges={zoom < 0.5 && edges.length > 100 ? visibleEdges : edges}
+      edges={edgesToRender}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
@@ -68,4 +77,5 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
   );
 };
 
-export default FlowComponent;
+// Use memo to prevent unnecessary re-renders
+export default memo(FlowComponent);

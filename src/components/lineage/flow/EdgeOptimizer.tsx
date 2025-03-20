@@ -8,17 +8,22 @@ const edgeSelector = (state: any) => ({
 });
 
 /**
- * Hook to optimize edges rendering based on zoom level
+ * Hook to optimize edges rendering based on zoom level and dragging state
  */
-export const useEdgeOptimizer = (edges: Edge[], nodes: Node[]) => {
+export const useEdgeOptimizer = (edges: Edge[], nodes: Node[], isDragging = false) => {
   // Get current zoom level to conditionally render edges
   const { transform } = useStore(edgeSelector);
   const zoom = transform[2];
   
-  // Optimize edges rendering based on zoom level
+  // Optimize edges rendering based on zoom level and dragging state
   const visibleEdges = useMemo(() => {
+    // During dragging, drastically reduce the number of visible edges
+    if (isDragging && edges.length > 50) {
+      return edges.slice(0, 50); // Only show first 50 edges during dragging
+    }
+    
+    // When zoomed out with many edges, hide edges between distant nodes
     if (zoom < 0.5 && edges.length > 100) {
-      // When zoomed out with many edges, hide edges between distant nodes
       return edges.filter(edge => {
         const source = nodes.find(n => n.id === edge.source);
         const target = nodes.find(n => n.id === edge.target);
@@ -34,7 +39,7 @@ export const useEdgeOptimizer = (edges: Edge[], nodes: Node[]) => {
       });
     }
     return edges;
-  }, [edges, nodes, zoom]);
+  }, [edges, nodes, zoom, isDragging]);
 
   return {
     visibleEdges,

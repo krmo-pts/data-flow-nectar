@@ -112,6 +112,7 @@
   height: auto !important;
   min-width: 240px;
   cursor: pointer;
+  contain: layout style paint; /* Add contain for better performance */
 }
 
 .lineage-flow .react-flow__node.selected .shadow-md {
@@ -121,6 +122,7 @@
 /* Override edge styles for better visibility and performance */
 .lineage-flow .react-flow__edge {
   cursor: pointer;
+  contain: layout style paint; /* Add contain for better performance */
 }
 
 .lineage-flow .react-flow__edge path {
@@ -146,6 +148,12 @@
 
 .react-flow__pane.dragging {
   cursor: grabbing;
+}
+
+/* Add performance optimizations for viewport rendering */
+.react-flow__viewport {
+  will-change: transform;
+  transform-style: flat;
 }
 
 /* Detail panels styling - made solid */
@@ -218,6 +226,13 @@
   will-change: d;
 }
 
-.react-flow__viewport {
+/* Optimize rendering during drag operations */
+.react-flow__node.dragging {
   will-change: transform;
+  z-index: 10;
+}
+
+/* Reduce rendering load during dragging by simplifying node appearance */
+.react-flow__node.dragging .divide-y > * {
+  border-top-width: 0;
 }

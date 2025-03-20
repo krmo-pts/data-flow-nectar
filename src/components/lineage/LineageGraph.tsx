@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState, useTransition } from 'react';
+import React, { useCallback, useState, useTransition, useMemo } from 'react';
 import {
   useNodesState,
   useEdgesState,
@@ -25,6 +25,7 @@ import FlowComponent from './FlowComponent';
 const LineageGraph: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [isDragging, setIsDragging] = useState(false);
   
   const {
     nodes,
@@ -49,26 +50,59 @@ const LineageGraph: React.FC = () => {
     setEdgesState(edges);
   }, [edges, setEdgesState]);
 
-  // More efficient node position update
+  // More efficient node position update with drag handling
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
     // Apply changes to the local state immediately for smooth UI update
     onNodesChange(changes);
     
-    // Use transition to update the main state without blocking the UI
-    startTransition(() => {
-      changes.forEach(change => {
-        if (change.type === 'position' && change.position) {
-          setNodes(prevNodes => 
-            prevNodes.map(node => 
-              node.id === change.id 
-                ? { ...node, position: change.position || node.position }
-                : node
-            )
-          );
-        }
+    // Detect drag operations
+    const dragChange = changes.find(change => change.type === 'position' && change.dragging !== undefined);
+    if (dragChange) {
+      // Update dragging state to optimize rendering during drag
+      setIsDragging(dragChange.dragging === true);
+    }
+    
+    // Only update the main state after drag completes to avoid performance issues
+    if (!dragChange?.dragging) {
+      startTransition(() => {
+        changes.forEach(change => {
+          if (change.type === 'position' && change.position) {
+            setNodes(prevNodes => 
+              prevNodes.map(node => 
+                node.id === change.id 
+                  ? { ...node, position: change.position || node.position }
+                  : node
+              )
+            );
+          }
+        });
       });
-    });
+    }
   }, [onNodesChange, setNodes]);
+
+  // More efficient edge updates - skip during dragging for better performance
+  const handleEdgesChange = useCallback((changes: EdgeChange[]) => {
+    // Apply changes to the local state immediately
+    onEdgesChange(changes);
+    
+    // Only update the main state if not dragging
+    if (!isDragging) {
+      startTransition(() => {
+        setEdges(prev => {
+          const nextEdges = [...prev];
+          changes.forEach(change => {
+            if (change.type === 'remove') {
+              const index = nextEdges.findIndex(edge => edge.id === change.id);
+              if (index !== -1) {
+                nextEdges.splice(index, 1);
+              }
+            }
+          });
+          return nextEdges;
+        });
+      });
+    }
+  }, [onEdgesChange, setEdges, isDragging]);
 
   const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
   const { 
@@ -126,7 +160,7 @@ const LineageGraph: React.FC = () => {
           nodes={nodesState}
           edges={edgesState}
           onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
+          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           handleNodeClick={handleNodeClick}
           handleEdgeClick={handleEdgeClick}
@@ -134,6 +168,7 @@ const LineageGraph: React.FC = () => {
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearchQuery}
           resetView={handleResetView}
+          isDragging={isDragging}
         />
       </ReactFlowProvider>
       

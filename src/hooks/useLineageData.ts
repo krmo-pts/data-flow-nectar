@@ -36,24 +36,48 @@ export function useLineageData() {
         
         console.log(`Loading ${dataToUse.nodes.length} nodes and ${dataToUse.edges.length} edges`);
         
-        const { flowNodes, flowEdges } = calculateInitialLayout(
-          dataToUse.nodes,
-          dataToUse.edges
-        );
-        
-        setNodes(flowNodes);
-        setEdges(flowEdges);
-        
-        // Give more time for the layout to stabilize before fitting view
-        // Increase timeout for larger datasets
-        let timeoutDuration = 300;
-        if (datasetSize === 'large') timeoutDuration = 1000;
-        if (datasetSize === 'veryLarge') timeoutDuration = 2000;
-        
-        setTimeout(() => {
-          reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
-          setIsLoading(false);
-        }, timeoutDuration);
+        // For very large datasets, apply chunked processing to avoid UI freeze
+        if (datasetSize === 'veryLarge') {
+          // First just load nodes with simplified layout for immediate display
+          setNodes(dataToUse.nodes.map((node, index) => ({
+            id: node.id,
+            type: 'default',
+            position: { x: (index % 20) * 300, y: Math.floor(index / 20) * 200 },
+            data: { ...node },
+            className: `node-${node.type}`,
+          })));
+          
+          // Then batch process the full layout calculation
+          setTimeout(() => {
+            const { flowNodes, flowEdges } = calculateInitialLayout(
+              dataToUse.nodes,
+              dataToUse.edges
+            );
+            
+            setNodes(flowNodes);
+            setEdges(flowEdges);
+            
+            setTimeout(() => {
+              reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
+              setIsLoading(false);
+            }, 500);
+          }, 100);
+        } else {
+          // For small/large datasets, calculate layout all at once
+          const { flowNodes, flowEdges } = calculateInitialLayout(
+            dataToUse.nodes,
+            dataToUse.edges
+          );
+          
+          setNodes(flowNodes);
+          setEdges(flowEdges);
+          
+          // Give more time for the layout to stabilize before fitting view
+          setTimeout(() => {
+            reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
+            setIsLoading(false);
+          }, datasetSize === 'small' ? 300 : 500);
+        }
       } catch (error) {
         console.error('Error loading lineage data:', error);
         toast({

@@ -23,10 +23,10 @@ const CustomEdge = ({
   // Get current viewport zoom level to optimize rendering
   const zoom = useStore((state) => state.transform[2]);
   
-  // Only render edge labels when zoomed in enough
-  const showLabel = zoom > 0.6 && data?.label;
+  // Only render edge labels when zoomed in enough and not too many edges
+  const showLabel = zoom > 1.0 && data?.label;
   
-  // Optimize path calculation
+  // Optimize path calculation with memoization
   const [edgePath, labelX, labelY] = useMemo(() => getBezierPath({
     sourceX,
     sourceY,
