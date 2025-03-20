@@ -12,7 +12,7 @@ import { useDetailsPanels } from '@/hooks/useDetailsPanels';
 import { useDragHandler } from '@/hooks/useDragHandler';
 import { useEdgeHandler } from '@/hooks/useEdgeHandler';
 import { useLineageSearch } from '@/hooks/useLineageSearch';
-import { useLineageFocus } from '@/hooks/useLineageFocus';
+import { useLineageFocus } from '@/hooks/useLineageFocus'; // Properly import the hook
 
 import NodeDetailsPanel from './NodeDetailsPanel';
 import EdgeDetailsPanel from './EdgeDetailsPanel';
@@ -101,7 +101,7 @@ const LineageGraph: React.FC = () => {
     edges.length > 300;
 
   return (
-    <div className="w-full h-full relative overflow-hidden">
+    <div className="w-full h-full relative">
       <LoadingOverlay isVisible={isLoading} datasetSize={datasetSize} />
       <DraggingIndicator showOverlay={showDraggingOverlay} />
       

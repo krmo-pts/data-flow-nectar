@@ -47,14 +47,6 @@
   animation: none !important;
 }
 
-/* Make sure the container takes full space */
-.react-flow, 
-.react-flow__container {
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-}
-
 /* Focus node styling */
 .focus-node {
   box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4) !important;

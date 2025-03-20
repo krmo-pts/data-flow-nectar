@@ -84,7 +84,6 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       style={{ height: '100%', width: '100%' }}
       nodeOrigin={[0.5, 0.5]}
       elementsSelectable={true}
-      fitViewOptions={{ padding: 0.1 }}
       {...rfOptions}
     >
       <FlowElements
