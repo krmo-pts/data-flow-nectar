@@ -109,8 +109,8 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
         cursor: 'move'
       }}
     >
-      {/* Header section */}
-      <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
+      {/* Header section with handles positioned in the middle */}
+      <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between relative">
         <div className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
           {getPlatformIcon(data.platform)}
           <div className="flex flex-col">
@@ -136,6 +136,18 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
             <Grid size={16} />
           </button>
         </div>
+        
+        {/* Handles for connections positioned in the middle of the header */}
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          className="w-2 h-2 rounded-full border-2 bg-background border-primary absolute top-1/2 left-0 transform -translate-y-1/2" 
+        />
+        <Handle 
+          type="source" 
+          position={Position.Right} 
+          className="w-2 h-2 rounded-full border-2 bg-background border-primary absolute top-1/2 right-0 transform -translate-y-1/2" 
+        />
       </div>
       
       {/* Columns section */}
@@ -180,18 +192,6 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
           )}
         </div>
       )}
-      
-      {/* Handles for connections */}
-      <Handle 
-        type="target" 
-        position={Position.Left} 
-        className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
-      />
-      <Handle 
-        type="source" 
-        position={Position.Right} 
-        className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
-      />
     </div>
   );
 };
