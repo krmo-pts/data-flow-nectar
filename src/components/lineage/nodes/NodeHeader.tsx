@@ -56,9 +56,9 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         </button>
       </div>
       
-      {/* Handles for connections positioned in the middle of the header */}
+      {/* Handles for connections - Fixed positioning to ensure button is fully visible */}
       <div
-        className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-4 z-10"
+        className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 left-0 z-10"
       >
         <button 
           className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -76,7 +76,7 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
       </div>
       
       <div
-        className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-4 z-10"
+        className="absolute top-1/2 transform -translate-y-1/2 translate-x-1/2 right-0 z-10"
       >
         <button 
           className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
