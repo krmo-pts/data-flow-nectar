@@ -17,8 +17,19 @@
 }
 
 .lineage-flow .react-flow__handle {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  min-height: 6px;
+}
+
+/* Improve handle positioning */
+.lineage-flow .react-flow__handle-left {
+  left: 0;
+}
+
+.lineage-flow .react-flow__handle-right {
+  right: 0;
 }
 
 /* Performance optimizations for edges */

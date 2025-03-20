@@ -57,33 +57,41 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
       </div>
       
       {/* Handles for connections positioned in the middle of the header */}
-      <button 
-        className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 p-1 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 z-10"
-        onClick={toggleIncomingLineage}
-        title={hideIncomingLineage ? "Show incoming lineage" : "Hide incoming lineage"}
+      <div
+        className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-4 z-10"
       >
-        {hideIncomingLineage ? <Link size={10} /> : <Unlink size={10} />}
+        <button 
+          className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+          onClick={toggleIncomingLineage}
+          title={hideIncomingLineage ? "Show incoming lineage" : "Hide incoming lineage"}
+        >
+          {hideIncomingLineage ? <Link size={10} /> : <Unlink size={10} />}
+        </button>
         <Handle 
           type="target" 
           position={Position.Left} 
-          className="w-full h-full rounded-full absolute top-0 left-0 opacity-0" 
+          className="w-2 h-2 min-w-2 min-h-2 rounded-full absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0" 
           isConnectable={!hideIncomingLineage}
         />
-      </button>
+      </div>
       
-      <button 
-        className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1 p-1 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 z-10"
-        onClick={toggleOutgoingLineage}
-        title={hideOutgoingLineage ? "Show outgoing lineage" : "Hide outgoing lineage"}
+      <div
+        className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-4 z-10"
       >
-        {hideOutgoingLineage ? <Link size={10} /> : <Unlink size={10} />}
+        <button 
+          className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+          onClick={toggleOutgoingLineage}
+          title={hideOutgoingLineage ? "Show outgoing lineage" : "Hide outgoing lineage"}
+        >
+          {hideOutgoingLineage ? <Link size={10} /> : <Unlink size={10} />}
+        </button>
         <Handle 
           type="source" 
           position={Position.Right} 
-          className="w-full h-full rounded-full absolute top-0 left-0 opacity-0" 
+          className="w-2 h-2 min-w-2 min-h-2 rounded-full absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0" 
           isConnectable={!hideOutgoingLineage}
         />
-      </button>
+      </div>
     </div>
   );
 };
