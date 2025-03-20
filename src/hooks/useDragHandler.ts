@@ -22,24 +22,33 @@ export function useDragHandler({ setNodes, onNodesChange }: UseDragHandlerProps)
     
     // If we have a position change, check its dragging status
     if (positionChange) {
+      const wasDragging = isDragging;
       const isDraggingNow = !!positionChange.dragging;
       
-      if (isDragging !== isDraggingNow) {
+      if (wasDragging !== isDraggingNow) {
+        console.log('Node drag state changed:', {
+          nodeId: positionChange.id,
+          isDragging: isDraggingNow,
+          wasDragging: wasDragging
+        });
         setIsDragging(isDraggingNow);
       }
       
       // Only update the main state after drag completes to avoid excessive updates
       if (!positionChange.dragging && positionChange.position) {
-        // Debounce the final position update to avoid stuttering
-        requestAnimationFrame(() => {
-          setNodes(prevNodes => 
-            prevNodes.map(node => 
-              node.id === positionChange.id 
-                ? { ...node, position: positionChange.position || node.position }
-                : node
-            )
-          );
+        console.log('Finalizing node position after drag:', {
+          nodeId: positionChange.id,
+          position: positionChange.position
         });
+        
+        // Update node positions in the main state
+        setNodes(prevNodes => 
+          prevNodes.map(node => 
+            node.id === positionChange.id 
+              ? { ...node, position: positionChange.position || node.position }
+              : node
+          )
+        );
       }
     }
   }, [onNodesChange, setNodes, isDragging]);

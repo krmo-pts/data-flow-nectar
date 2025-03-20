@@ -10,24 +10,19 @@ export const useEdgeOptimizer = (edges: Edge[], nodes: Node[], isDragging = fals
   // Optimize edges rendering based on zoom level and dragging state
   const visibleEdges = useMemo(() => {
     // During dragging, drastically reduce the number of visible edges
-    if (isDragging) {
-      if (edges.length > 200) {
-        return edges.slice(0, 25); // Only show first 25 edges during dragging for large graphs
-      }
-      if (edges.length > 50) {
-        return edges.slice(0, Math.min(50, edges.length / 2)); // Show half the edges for medium graphs
-      }
+    if (isDragging && edges.length > 50) {
+      return edges.slice(0, Math.min(20, edges.length)); // Only show first 20 edges during dragging
     }
     
     // When zoomed out with many edges, hide more edges
     if (zoom < 0.5 && edges.length > 100) {
       // Show fewer edges when zoomed out
-      return edges.filter((_, index) => index % Math.ceil(edges.length / 50) === 0);
+      return edges.filter((_, index) => index % Math.ceil(edges.length / 100) === 0);
     }
     
     if (zoom < 0.8 && edges.length > 200) {
       // Show a subset of edges based on zoom level
-      return edges.filter((_, index) => index % Math.ceil(edges.length / 100) === 0);
+      return edges.filter((_, index) => index % Math.ceil(edges.length / 200) === 0);
     }
     
     return edges;

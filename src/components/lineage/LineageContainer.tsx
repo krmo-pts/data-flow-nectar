@@ -1,27 +1,16 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import LineageGraph from './LineageGraph';
 import { ReactFlowProvider } from 'reactflow';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 
 const LineageContainer: React.FC = () => {
   const [key, setKey] = useState(0);
-  const { toast } = useToast();
   
-  const resetLayout = useCallback(() => {
-    toast({
-      title: "Resetting layout",
-      description: "Rearranging nodes for better visualization",
-      duration: 2000,
-    });
-    
-    // Use requestAnimationFrame to avoid blocking the main thread
-    requestAnimationFrame(() => {
-      setKey(prevKey => prevKey + 1);
-    });
-  }, [toast]);
+  const resetLayout = () => {
+    setKey(prevKey => prevKey + 1);
+  };
 
   return (
     <div className="w-full h-full relative">

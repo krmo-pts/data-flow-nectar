@@ -1,3 +1,4 @@
+
 /* Override edge styles for better visibility and performance */
 .lineage-flow .react-flow__edge {
   cursor: pointer;
@@ -83,11 +84,8 @@
 
 /* Optimize edge rendering during drag operations */
 .lineage-flow.is-dragging .react-flow__edge {
-  opacity: 0.15 !important; /* Make edges more transparent during drag */
-  pointer-events: none !important; /* Disable interaction for better performance */
-  stroke-width: 1 !important; /* Thinner lines for better performance */
-  transition: none !important;
-  animation: none !important;
+  opacity: 0.3; /* Make edges more transparent during drag */
+  pointer-events: none; /* Disable interaction for better performance */
 }
 
 /* Optimize edge labels */
