@@ -30,11 +30,13 @@
 
 /* Position handles to properly align with the connection buttons */
 .lineage-flow .react-flow__handle-left {
-  left: -5px; /* Position to match the button */
+  left: -5px !important; /* Position to match the button */
+  transform: none !important;
 }
 
 .lineage-flow .react-flow__handle-right {
-  right: -5px; /* Position to match the button */
+  right: -5px !important; /* Position to match the button */
+  transform: none !important;
 }
 
 /* Performance optimizations for edges */
@@ -54,5 +56,11 @@
 
 .react-flow__node-default > div,
 .react-flow__node > div {
+  overflow: visible !important;
+}
+
+/* Ensure every nested element inside a node has overflow visible */
+.react-flow__node-default *,
+.react-flow__node * {
   overflow: visible !important;
 }

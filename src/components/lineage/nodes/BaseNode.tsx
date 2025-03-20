@@ -1,5 +1,5 @@
 
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import { NodeProps, useReactFlow } from 'reactflow';
 import { NodeData } from '../../../types/lineage';
 import { getNodeTypeClass } from './NodeUtils';
@@ -19,55 +19,61 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   // Ensure we have columns data
   const columns = data.columns || [];
   
-  const toggleExpand = (e: React.MouseEvent) => {
+  const toggleExpand = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
-    setExpanded(!expanded);
-  };
+    setExpanded(prev => !prev);
+  }, []);
   
-  const toggleShowAll = (e: React.MouseEvent) => {
+  const toggleShowAll = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
-    setShowAllColumns(!showAllColumns);
-  };
+    setShowAllColumns(prev => !prev);
+  }, []);
   
   // Function to toggle incoming lineage connections
-  const toggleIncomingLineage = (e: React.MouseEvent) => {
+  const toggleIncomingLineage = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
-    const newState = !hideIncomingLineage;
-    setHideIncomingLineage(newState);
-    
-    // Update edges visibility based on toggle state
-    setEdges(edges => {
-      return edges.map(edge => {
-        if (edge.target === data.id) {
-          return {
-            ...edge,
-            hidden: newState
-          };
-        }
-        return edge;
+    setHideIncomingLineage(prev => {
+      const newState = !prev;
+      
+      // Update edges visibility based on toggle state
+      setEdges(edges => {
+        return edges.map(edge => {
+          if (edge.target === data.id) {
+            return {
+              ...edge,
+              hidden: newState
+            };
+          }
+          return edge;
+        });
       });
+      
+      return newState;
     });
-  };
+  }, [data.id, setEdges]);
   
   // Function to toggle outgoing lineage connections
-  const toggleOutgoingLineage = (e: React.MouseEvent) => {
+  const toggleOutgoingLineage = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
-    const newState = !hideOutgoingLineage;
-    setHideOutgoingLineage(newState);
-    
-    // Update edges visibility based on toggle state
-    setEdges(edges => {
-      return edges.map(edge => {
-        if (edge.source === data.id) {
-          return {
-            ...edge,
-            hidden: newState
-          };
-        }
-        return edge;
+    setHideOutgoingLineage(prev => {
+      const newState = !prev;
+      
+      // Update edges visibility based on toggle state
+      setEdges(edges => {
+        return edges.map(edge => {
+          if (edge.source === data.id) {
+            return {
+              ...edge,
+              hidden: newState
+            };
+          }
+          return edge;
+        });
       });
+      
+      return newState;
     });
-  };
+  }, [data.id, setEdges]);
   
   return (
     <div 

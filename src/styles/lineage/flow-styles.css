@@ -13,3 +13,14 @@
   will-change: transform;
   transform-style: flat;
 }
+
+/* Disable transitions for better performance */
+.react-flow__viewport {
+  transition: none !important;
+}
+
+/* Ensure connection handles are visible */
+.react-flow__handle {
+  pointer-events: all !important;
+  z-index: 10 !important;
+}

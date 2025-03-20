@@ -1,5 +1,5 @@
 
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useMemo } from 'react';
 import { ReactFlow, Connection, Node, Edge } from 'reactflow';
 
 import { nodeTypes, edgeTypes } from './flow/FlowTypeDefinitions';
@@ -45,8 +45,12 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
   // Get ReactFlow options
   const rfOptions = useFlowOptions();
   
+  // Use memo for edges to prevent unnecessary recalculations
+  const memoizedEdges = useMemo(() => edges, [edges]);
+  const memoizedNodes = useMemo(() => nodes, [nodes]);
+  
   // Optimize edges rendering based on zoom level and dragging state
-  const { visibleEdges } = useEdgeOptimizer(edges, nodes, isDragging);
+  const { visibleEdges } = useEdgeOptimizer(memoizedEdges, memoizedNodes, isDragging);
 
   return (
     <ReactFlow
