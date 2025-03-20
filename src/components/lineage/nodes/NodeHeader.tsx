@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { ChevronDown, ChevronUp, Grid, Link, Unlink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Grid, Eye, EyeOff } from 'lucide-react';
 import PlatformIcon from './PlatformIcon';
 
 interface NodeHeaderProps {
@@ -72,7 +72,7 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
           title={hideIncomingLineage ? "Show incoming lineage" : "Hide incoming lineage"}
           style={{ position: 'relative', zIndex: 30 }}
         >
-          {hideIncomingLineage ? <Link size={10} /> : <Unlink size={10} />}
+          {hideIncomingLineage ? <Eye size={10} /> : <EyeOff size={10} />}
         </button>
         <Handle 
           type="target" 
@@ -104,7 +104,7 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
           title={hideOutgoingLineage ? "Show outgoing lineage" : "Hide outgoing lineage"}
           style={{ position: 'relative', zIndex: 30 }}
         >
-          {hideOutgoingLineage ? <Link size={10} /> : <Unlink size={10} />}
+          {hideOutgoingLineage ? <Eye size={10} /> : <EyeOff size={10} />}
         </button>
         <Handle 
           type="source" 
