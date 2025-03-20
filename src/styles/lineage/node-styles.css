@@ -1,4 +1,3 @@
-
 /* Colors for different node types - restored with solid backgrounds */
 :root {
   --node-table-color: 214 80% 95%;
@@ -50,14 +49,19 @@
   min-width: 240px;
   cursor: pointer;
   overflow: visible !important;
-  contain: layout style; /* Optimize rendering */
+  contain: layout style paint; /* Optimize rendering */
   will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Node container styling for stable positioning */
 .node-container {
   transform-origin: top center;
-  transition: none; /* Disable transitions to prevent animation */
+  transition: none !important; /* Completely disable transitions */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Explicitly ensure node content doesn't clip the buttons */
@@ -83,6 +87,8 @@
   will-change: transform;
   overflow: visible !important; /* Ensure this is always applied */
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style paint;
 }
 
 .react-flow__node * {
@@ -91,14 +97,21 @@
 
 /* Optimize node appearance during dragging */
 .lineage-flow.is-dragging .react-flow__node:not(.dragging) {
-  opacity: 0.4; /* More faded for better focus on dragged node */
-  transition: none; /* Remove transition to improve performance */
+  opacity: 0.3 !important; /* More faded for better focus on dragged node */
+  transition: none !important; /* Remove transition to improve performance */
+  pointer-events: none;
 }
 
 .lineage-flow.is-dragging .react-flow__node.dragging {
   opacity: 1;
   z-index: 20;
   @apply shadow-lg;
+}
+
+/* Drastically simplify nodes during dragging for better performance */
+.lineage-flow.is-dragging .react-flow__node .node-content,
+.lineage-flow.is-dragging .react-flow__node .node-details {
+  display: none !important;
 }
 
 /* Style simplified placeholders during dragging */
