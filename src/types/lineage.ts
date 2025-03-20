@@ -48,7 +48,8 @@ export interface EdgeData {
   label?: string;
   description?: string;
   transformationType?: string;
-  isImpactPath?: boolean; // New property to highlight edges in the impact path
+  isImpactPath?: boolean; // Property to highlight edges in the impact path
+  metadata?: Record<string, string | number | boolean>; // Added metadata property
 }
 
 export interface LineageData {
