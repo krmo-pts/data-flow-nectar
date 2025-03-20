@@ -80,8 +80,8 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
         // Show a toast for large graphs
         toast({
           title: shouldHide ? "Hiding lineage..." : "Showing lineage...",
-          description: `Processing ${direction === 'incoming' ? 'upstream' : 'downstream'} connections in batches.`,
-          duration: 3000,
+          description: `Processing ${direction === 'incoming' ? 'upstream' : 'downstream'} connections in batches.`
+          // Removed the duration property as it's not in the Toast type
         });
         
         // Continue with the rest in chunks
