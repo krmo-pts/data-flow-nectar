@@ -16,21 +16,24 @@
   stroke-width: 3;
 }
 
+/* Make handles larger but completely transparent */
 .lineage-flow .react-flow__handle {
-  width: 6px;
-  height: 6px;
-  min-width: 6px;
-  min-height: 6px;
-  opacity: 0;
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  min-height: 10px;
+  opacity: 0; /* Completely transparent */
+  border: none; /* Remove border */
+  background: transparent; /* Transparent background */
 }
 
 /* Position handles to properly align with the connection buttons */
 .lineage-flow .react-flow__handle-left {
-  left: 0; 
+  left: -5px; /* Position to match the button */
 }
 
 .lineage-flow .react-flow__handle-right {
-  right: 0;
+  right: -5px; /* Position to match the button */
 }
 
 /* Performance optimizations for edges */

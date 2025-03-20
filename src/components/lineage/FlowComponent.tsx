@@ -75,6 +75,9 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       attributionPosition="bottom-right"
       className={`lineage-flow ${isDragging ? 'is-dragging' : ''}`}
       style={{ height: '100%', width: '100%' }}
+      // Add additional props to ensure node connections are visible
+      nodeOrigin={[0.5, 0.5]} // Center node origin
+      elementsSelectable={true}
       {...rfOptions}
     >
       <FlowElements

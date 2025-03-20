@@ -49,8 +49,16 @@
   height: auto !important;
   min-width: 240px;
   cursor: pointer;
-  /* Add overflow visible to ensure the buttons show completely */
-  overflow: visible;
+}
+
+/* Explicitly ensure node content doesn't clip the buttons */
+.lineage-flow .react-flow__node-content {
+  overflow: visible !important;
+}
+
+/* Make React Flow node container overflow visible */
+.lineage-flow .react-flow__node {
+  overflow: visible !important;
 }
 
 .lineage-flow .react-flow__node.selected .shadow-md {
@@ -60,7 +68,7 @@
 /* Performance optimizations for large datasets */
 .react-flow__node {
   will-change: transform;
-  overflow: visible;
+  overflow: visible !important; /* Ensure this is always applied */
 }
 
 /* Optimize node appearance during dragging */
