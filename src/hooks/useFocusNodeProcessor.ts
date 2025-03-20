@@ -21,7 +21,7 @@ export function useFocusNodeProcessor(
   const processFocusNode = useCallback((
     nodeId: string,
     prevNodes: Node[],
-  ) => {
+  ): Node[] => {
     setIsAnalyzing(true);
     
     // Use setTimeout to avoid blocking the UI
@@ -112,9 +112,12 @@ export function useFocusNodeProcessor(
       zoomToFocusNode(nodeId, prevNodes, reactFlowInstance, prevNodes.length);
       
       // Update nodes with analysis results
-      return updateNodesWithAnalysisResults(prevNodes, nodeMap, nodeId);
+      setNodes(updateNodesWithAnalysisResults(prevNodes, nodeMap, nodeId));
     }, 10); // Small delay to allow UI to update
-  }, [reactFlowInstance, setEdges, setIsAnalyzing]);
+    
+    // Return the original nodes for now (they'll be updated via setNodes in the setTimeout)
+    return prevNodes;
+  }, [reactFlowInstance, setEdges, setIsAnalyzing, setNodes]);
 
   return {
     processFocusNode,
