@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -14,7 +14,6 @@ import {
   useReactFlow,
   NodeTypes,
   EdgeTypes,
-  Panel,
   BackgroundVariant,
   MarkerType,
 } from 'reactflow';
@@ -25,10 +24,11 @@ import BaseNode from './nodes/BaseNode';
 import CustomEdge from './edges/CustomEdge';
 import NodeDetailsPanel from './NodeDetailsPanel';
 import EdgeDetailsPanel from './EdgeDetailsPanel';
+import SearchPanel from './SearchPanel';
+import ControlPanel from './ControlPanel';
 import { mockLineageData } from '@/data/mockLineageData';
-import { Button } from '@/components/ui/button';
-import { Search, ZoomIn, ZoomOut, Maximize2, RefreshCw } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { calculateInitialLayout } from '@/utils/lineageLayout';
+import { useLineageSearch } from '@/hooks/useLineageSearch';
 
 const nodeTypes: NodeTypes = {
   default: BaseNode,
@@ -48,124 +48,13 @@ const LineageGraph: React.FC = () => {
   const [isEdgePanelOpen, setIsEdgePanelOpen] = useState(false);
 
   const reactFlowInstance = useReactFlow();
+  const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
   
   const initialLayout = useCallback(() => {
-    // Create a map of node IDs to track dependencies
-    const nodeMap = new Map();
-    const incomingEdges = new Map();
-    const outgoingEdges = new Map();
-    
-    // Initialize maps
-    mockLineageData.nodes.forEach(node => {
-      nodeMap.set(node.id, node);
-      incomingEdges.set(node.id, []);
-      outgoingEdges.set(node.id, []);
-    });
-    
-    // Map connections between nodes
-    mockLineageData.edges.forEach(edge => {
-      if (outgoingEdges.has(edge.source)) {
-        outgoingEdges.get(edge.source).push(edge.target);
-      }
-      
-      if (incomingEdges.has(edge.target)) {
-        incomingEdges.get(edge.target).push(edge.source);
-      }
-    });
-    
-    // Calculate node levels based on dependencies
-    const nodeLevels = new Map();
-    const calculateLevel = (nodeId, visited = new Set()) => {
-      // Prevent infinite loops with circular dependencies
-      if (visited.has(nodeId)) return 0;
-      
-      visited.add(nodeId);
-      
-      // If node has no incoming edges, it's a source node (level 0)
-      const incoming = incomingEdges.get(nodeId) || [];
-      if (incoming.length === 0) return 0;
-      
-      // Node level is 1 + max level of all its dependencies
-      let maxLevel = 0;
-      for (const sourceId of incoming) {
-        const sourceLevel = nodeLevels.has(sourceId) 
-          ? nodeLevels.get(sourceId) 
-          : calculateLevel(sourceId, new Set(visited));
-        maxLevel = Math.max(maxLevel, sourceLevel);
-      }
-      
-      return maxLevel + 1;
-    };
-    
-    // Calculate levels for all nodes
-    mockLineageData.nodes.forEach(node => {
-      if (!nodeLevels.has(node.id)) {
-        nodeLevels.set(node.id, calculateLevel(node.id));
-      }
-    });
-    
-    // Group nodes by their level
-    const nodesByLevel = new Map();
-    nodeLevels.forEach((level, nodeId) => {
-      if (!nodesByLevel.has(level)) {
-        nodesByLevel.set(level, []);
-      }
-      nodesByLevel.get(level).push(nodeId);
-    });
-    
-    // Position nodes based on their level
-    const levelWidth = 250; // Horizontal spacing between levels
-    const nodePositions = {};
-    
-    // Sort levels for left-to-right layout
-    const sortedLevels = Array.from(nodesByLevel.keys()).sort((a, b) => a - b);
-    
-    sortedLevels.forEach((level, levelIndex) => {
-      const nodesInLevel = nodesByLevel.get(level) || [];
-      const levelHeight = nodesInLevel.length * 150; // Total height needed for this level
-      const startY = -levelHeight / 2; // Center vertically
-      
-      nodesInLevel.forEach((nodeId, nodeIndex) => {
-        // Position more evenly on the y-axis with some variance to avoid straight lines
-        const variance = Math.random() * 40 - 20; // Small random offset for visual interest
-        
-        nodePositions[nodeId] = {
-          x: level * levelWidth,
-          y: startY + nodeIndex * 150 + variance, // Space nodes within level
-        };
-      });
-    });
-    
-    // Create React Flow nodes with positioned data
-    const flowNodes = mockLineageData.nodes.map((node) => {
-      const position = nodePositions[node.id] || { x: Math.random() * 500, y: Math.random() * 500 };
-      
-      return {
-        id: node.id,
-        type: 'default',
-        position,
-        data: { ...node },
-        className: `node-${node.type}`,
-      };
-    });
-    
-    // Create edges with marker end and data
-    const flowEdges = mockLineageData.edges.map((edge) => {
-      return {
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        data: edge,
-        type: 'default',
-        animated: false,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 15,
-          height: 15,
-          color: '#64748b',
-        },
-      };
-    });
+    const { flowNodes, flowEdges } = calculateInitialLayout(
+      mockLineageData.nodes,
+      mockLineageData.edges
+    );
     
     setNodes(flowNodes);
     setEdges(flowEdges);
@@ -224,77 +113,9 @@ const LineageGraph: React.FC = () => {
     setIsEdgePanelOpen(false);
   }, []);
 
-  const handleSearch = useCallback(() => {
-    if (!searchQuery) {
-      // Reset highlight if search is empty
-      setNodes((nds) => 
-        nds.map((node) => ({
-          ...node,
-          className: `node-${(node.data as NodeData).type}`,
-        }))
-      );
-      return;
-    }
-    
-    const query = searchQuery.toLowerCase();
-    
-    // Highlight nodes that match the search query
-    setNodes((nds) => 
-      nds.map((node) => {
-        const data = node.data as NodeData;
-        const matches = 
-          data.name.toLowerCase().includes(query) ||
-          data.path.toLowerCase().includes(query) ||
-          data.platform.toLowerCase().includes(query) ||
-          data.type.toLowerCase().includes(query) ||
-          data.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-          false;
-        
-        return {
-          ...node,
-          className: matches 
-            ? `node-${data.type} border-primary shadow-md ring-2 ring-primary/20` 
-            : `node-${data.type} opacity-40`,
-        };
-      })
-    );
-    
-    // Also update edges to show/hide based on connected nodes
-    setEdges((eds) => 
-      eds.map((edge) => {
-        const sourceNode = nodes.find(node => node.id === edge.source);
-        const targetNode = nodes.find(node => node.id === edge.target);
-        
-        const sourceData = sourceNode?.data as NodeData;
-        const targetData = targetNode?.data as NodeData;
-        
-        const sourceMatches = 
-          sourceData?.name.toLowerCase().includes(query) ||
-          sourceData?.path.toLowerCase().includes(query) ||
-          sourceData?.platform.toLowerCase().includes(query) ||
-          sourceData?.type.toLowerCase().includes(query) ||
-          sourceData?.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-          false;
-          
-        const targetMatches = 
-          targetData?.name.toLowerCase().includes(query) ||
-          targetData?.path.toLowerCase().includes(query) ||
-          targetData?.platform.toLowerCase().includes(query) ||
-          targetData?.type.toLowerCase().includes(query) ||
-          targetData?.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-          false;
-        
-        return {
-          ...edge,
-          className: sourceMatches || targetMatches ? '' : 'opacity-20',
-        };
-      })
-    );
-  }, [searchQuery, nodes, setEdges, setNodes]);
-
-  const fitView = useCallback(() => {
-    reactFlowInstance.fitView({ padding: 0.2 });
-  }, [reactFlowInstance]);
+  const handleSearchQuery = useCallback(() => {
+    handleSearch(searchQuery);
+  }, [searchQuery, handleSearch]);
 
   const resetView = useCallback(() => {
     initialLayout();
@@ -340,33 +161,13 @@ const LineageGraph: React.FC = () => {
           className="glass-panel"
         />
         
-        <Panel position="top-left" className="glass-panel p-2 rounded-md flex items-center space-x-2">
-          <Input
-            type="text"
-            placeholder="Search nodes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64 h-8 text-sm"
-          />
-          <Button size="sm" onClick={handleSearch} className="h-8 px-2">
-            <Search className="h-4 w-4" />
-          </Button>
-        </Panel>
+        <SearchPanel 
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          handleSearch={handleSearchQuery}
+        />
         
-        <Panel position="bottom-left" className="glass-panel p-2 rounded-md flex items-center space-x-2">
-          <Button size="sm" onClick={() => reactFlowInstance.zoomIn()} className="h-8 w-8 p-0">
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button size="sm" onClick={() => reactFlowInstance.zoomOut()} className="h-8 w-8 p-0">
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button size="sm" onClick={fitView} className="h-8 w-8 p-0">
-            <Maximize2 className="h-4 w-4" />
-          </Button>
-          <Button size="sm" onClick={resetView} className="h-8 w-8 p-0">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </Panel>
+        <ControlPanel resetView={resetView} />
       </ReactFlow>
       
       <NodeDetailsPanel 
