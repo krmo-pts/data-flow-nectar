@@ -7,3 +7,6 @@ export {
   traceDownstreamDependencies,
   traceLineageDependencies
 } from './tracing';
+
+// For compatibility with older code that might use nodeMaps
+export { createNodeMaps } from './nodeMaps';

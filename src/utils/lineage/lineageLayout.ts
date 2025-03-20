@@ -6,13 +6,16 @@ import { createNodeMaps } from './nodeMaps';
 import { calculateStandardLayout } from './standardLayout';
 import { calculateLargeDatasetLayout } from './largeDatasetLayout';
 
+/**
+ * Calculates the initial layout for a lineage graph
+ */
 export const calculateInitialLayout = (
   nodes: NodeData[],
   edges: EdgeData[]
 ): LayoutResult => {
   console.time('layoutCalculation');
   
-  // Create node maps for dependencies
+  // Create node maps for calculating dependencies
   const nodeMaps = createNodeMaps(nodes, edges);
   
   // Check if we're using a large dataset
