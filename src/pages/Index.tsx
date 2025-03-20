@@ -15,8 +15,8 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10 h-14">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
+      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10 h-14 flex-shrink-0">
         <div className="container h-full mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center">
             <h1 className="text-2xl font-semibold">Data Lineage Explorer</h1>
@@ -24,7 +24,7 @@ const Index = () => {
         </div>
       </header>
       
-      <main className="flex-1 h-[calc(100vh-3.5rem)]">
+      <main className="flex-1 overflow-hidden">
         {isLoading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="flex flex-col items-center space-y-4">
