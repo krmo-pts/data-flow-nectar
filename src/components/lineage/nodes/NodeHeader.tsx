@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { ChevronDown, ChevronUp, Grid, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, EyeOff, Loader2 } from 'lucide-react';
 import PlatformIcon from './PlatformIcon';
 
 interface NodeHeaderProps {
@@ -49,12 +48,6 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
           className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors"
         >
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-        <button 
-          className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors ml-1"
-          onClick={(e) => e.stopPropagation()} // Prevent node selection
-        >
-          <Grid size={16} />
         </button>
       </div>
       
