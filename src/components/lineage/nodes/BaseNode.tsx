@@ -1,72 +1,10 @@
 
 import React, { memo, useState, useEffect } from 'react';
-import { Handle, Position, NodeProps, useReactFlow } from 'reactflow';
+import { NodeProps, useReactFlow } from 'reactflow';
 import { NodeData } from '../../../types/lineage';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Database, 
-  FileText, 
-  BarChart3,
-  Server,
-  Cloud,
-  ArrowRight,
-  Grid,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  ChevronUp,
-  Link,
-  Unlink
-} from 'lucide-react';
-
-// Memoize icon components to prevent re-renders
-const PlatformIcons = {
-  database: memo(() => <Database className="h-4 w-4" />),
-  chart: memo(() => <BarChart3 className="h-4 w-4" />),
-  cloud: memo(() => <Cloud className="h-4 w-4" />),
-  server: memo(() => <Server className="h-4 w-4" />)
-};
-
-const getPlatformIcon = (platform: string) => {
-  switch (platform) {
-    case 'postgres':
-    case 'oracle':
-    case 'mysql':
-    case 'snowflake':
-      return <PlatformIcons.database />;
-    case 'tableau':
-    case 'powerbi':
-    case 'looker':
-      return <PlatformIcons.chart />;
-    case 'azure':
-    case 'aws':
-    case 'gcp':
-      return <PlatformIcons.cloud />;
-    default:
-      return <PlatformIcons.server />;
-  }
-};
-
-const getNodeTypeClass = (type: string) => {
-  switch (type) {
-    case 'table':
-      return 'node-table';
-    case 'task':
-      return 'node-task';
-    case 'report':
-      return 'node-report';
-    default:
-      return '';
-  }
-};
-
-// Column component to improve rendering performance
-const Column = memo(({ name, type }: { name: string, type: string }) => (
-  <div className="flex items-center justify-between px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800">
-    <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{name}</span>
-    <span className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400">{type}</span>
-  </div>
-));
+import { getNodeTypeClass } from './NodeUtils';
+import NodeHeader from './NodeHeader';
+import NodeContent from './NodeContent';
 
 const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   const [expanded, setExpanded] = useState(true);
@@ -88,12 +26,9 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   }, [dragging, data.id, data.name, expanded, data.columns?.length]);
   
   const nodeTypeClass = getNodeTypeClass(data.type);
-  const maxVisibleColumns = showAllColumns ? 100 : 5;
-
+  
   // Ensure we have columns data
   const columns = data.columns || [];
-  const visibleColumns = expanded ? columns.slice(0, maxVisibleColumns) : [];
-  const hiddenColumnsCount = columns.length - visibleColumns.length;
   
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
@@ -157,106 +92,22 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
         cursor: 'move'
       }}
     >
-      {/* Header section with handles positioned in the middle */}
-      <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between relative">
-        <div className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
-          {getPlatformIcon(data.platform)}
-          <div className="flex flex-col">
-            <div className="font-medium">
-              {data.name}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-normal">
-              {data.platform} / {data.type}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <button 
-            onClick={toggleExpand}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors"
-          >
-            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-          <button 
-            className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm transition-colors ml-1"
-            onClick={(e) => e.stopPropagation()} // Prevent node selection
-          >
-            <Grid size={16} />
-          </button>
-        </div>
-        
-        {/* Handles for connections positioned in the middle of the header */}
-        <button 
-          className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 p-1 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 z-10"
-          onClick={toggleIncomingLineage}
-          title={hideIncomingLineage ? "Show incoming lineage" : "Hide incoming lineage"}
-        >
-          {hideIncomingLineage ? <Link size={10} /> : <Unlink size={10} />}
-          <Handle 
-            type="target" 
-            position={Position.Left} 
-            className="w-full h-full rounded-full absolute top-0 left-0 opacity-0" 
-            isConnectable={!hideIncomingLineage}
-          />
-        </button>
-        
-        <button 
-          className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1 p-1 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 z-10"
-          onClick={toggleOutgoingLineage}
-          title={hideOutgoingLineage ? "Show outgoing lineage" : "Hide outgoing lineage"}
-        >
-          {hideOutgoingLineage ? <Link size={10} /> : <Unlink size={10} />}
-          <Handle 
-            type="source" 
-            position={Position.Right} 
-            className="w-full h-full rounded-full absolute top-0 left-0 opacity-0" 
-            isConnectable={!hideOutgoingLineage}
-          />
-        </button>
-      </div>
+      <NodeHeader 
+        data={data}
+        expanded={expanded}
+        toggleExpand={toggleExpand}
+        hideIncomingLineage={hideIncomingLineage}
+        hideOutgoingLineage={hideOutgoingLineage}
+        toggleIncomingLineage={toggleIncomingLineage}
+        toggleOutgoingLineage={toggleOutgoingLineage}
+      />
       
-      {/* Columns section */}
-      {expanded && (
-        <div className={`bg-white dark:bg-gray-900`}>
-          {visibleColumns.length > 0 ? (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {visibleColumns.map((column, index) => (
-                <Column key={index} name={column.name} type={column.type} />
-              ))}
-            </div>
-          ) : (
-            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
-              No columns available
-            </div>
-          )}
-          
-          {/* Footer controls */}
-          {columns.length > 5 && (
-            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
-              <button 
-                className="hover:underline flex items-center space-x-1"
-                onClick={toggleShowAll}
-              >
-                {showAllColumns ? (
-                  <>
-                    <EyeOff size={14} />
-                    <span>Hide unused columns</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye size={14} />
-                    <span>Show all {columns.length} columns</span>
-                  </>
-                )}
-              </button>
-              
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {hiddenColumnsCount > 0 && `+${hiddenColumnsCount} more`}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+      <NodeContent 
+        expanded={expanded}
+        columns={columns}
+        showAllColumns={showAllColumns}
+        toggleShowAll={toggleShowAll}
+      />
     </div>
   );
 };
