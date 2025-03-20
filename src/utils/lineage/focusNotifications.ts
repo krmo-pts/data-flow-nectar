@@ -1,10 +1,10 @@
 
-import { Toast } from "@/components/ui/use-toast";
+import { type ToastProps } from "@/hooks/use-toast";
 
 /**
  * Displays analysis started notification
  */
-export const showAnalysisStartedToast = (toast: Toast, nodeId: string) => {
+export const showAnalysisStartedToast = (toast: (props: ToastProps) => void, nodeId: string) => {
   toast({
     title: 'Impact Analysis',
     description: `Analyzing dependencies for node ${nodeId}`,
@@ -14,7 +14,7 @@ export const showAnalysisStartedToast = (toast: Toast, nodeId: string) => {
 /**
  * Displays analysis in progress notification
  */
-export const showAnalysisInProgressToast = (toast: Toast) => {
+export const showAnalysisInProgressToast = (toast: (props: ToastProps) => void) => {
   toast({
     title: 'Analysis in progress',
     description: 'Please wait for the current analysis to complete',

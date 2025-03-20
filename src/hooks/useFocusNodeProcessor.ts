@@ -5,7 +5,7 @@ import { NodeData, EdgeData } from '@/types/lineage';
 import { traceUpstreamDependencies, traceDownstreamDependencies } from '@/utils/lineage/dependencyTracing';
 import { updateEdgesWithImpactPath } from '@/utils/lineage/edgeUpdates';
 import { updateNodesWithAnalysisResults, zoomToFocusNode } from '@/utils/lineage/nodeUpdates';
-import { Toast } from '@/components/ui/use-toast';
+import { type ToastProps } from '@/hooks/use-toast';
 
 /**
  * Hook for processing focus node updates
@@ -14,7 +14,7 @@ export function useFocusNodeProcessor(
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>,
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>,
   reactFlowInstance: any,
-  toast: Toast
+  toast: (props: ToastProps) => void
 ) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 

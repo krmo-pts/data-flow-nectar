@@ -37,7 +37,9 @@ export function useLineageFocus(
     showAnalysisStartedToast(toast, nodeId);
     
     // Process the focus node and update the state
-    setNodes(prevNodes => processFocusNode(nodeId, prevNodes));
+    setNodes(prevNodes => {
+      return processFocusNode(nodeId, prevNodes);
+    });
     
   }, [isAnalyzing, processFocusNode, setNodes, toast]);
 
