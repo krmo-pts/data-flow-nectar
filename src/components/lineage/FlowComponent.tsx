@@ -74,6 +74,7 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       nodesDraggable={true}
       attributionPosition="bottom-right"
       className={`lineage-flow ${isDragging ? 'is-dragging' : ''}`}
+      style={{ height: '100%', width: '100%' }}
       {...rfOptions}
     >
       <FlowElements
