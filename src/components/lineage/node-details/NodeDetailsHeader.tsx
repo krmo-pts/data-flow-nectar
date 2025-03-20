@@ -41,23 +41,15 @@ const NodeDetailsHeader: React.FC<NodeDetailsHeaderProps> = ({
     <div className="p-6 border-b border-border">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-foreground">Node Details</h2>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <div className="space-y-4">
-        <div>
-          {/* Full width node name without the button competing for space */}
-          <h3 className="text-2xl font-bold text-foreground mb-2">{node.name}</h3>
-          
-          {/* Focus button moved below the name */}
+        
+        {/* Focus button placed between title and close button */}
+        <div className="flex items-center gap-2">
           {onSetFocus && (
             <Button 
               variant={isLocalFocus ? "default" : "outline"}
               size="sm" 
               onClick={handleSetFocus}
-              className="mb-3 flex items-center gap-1"
+              className="flex items-center gap-1"
               disabled={isAnalyzing}
             >
               {isAnalyzing ? (
@@ -78,6 +70,17 @@ const NodeDetailsHeader: React.FC<NodeDetailsHeaderProps> = ({
               )}
             </Button>
           )}
+          
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <div className="space-y-4">
+        <div>
+          {/* Node name now has full width of the panel */}
+          <h3 className="text-2xl font-bold text-foreground mb-3">{node.name}</h3>
           
           <div className="flex flex-wrap gap-2 mb-2">
             <Badge variant="outline" className={getTypeColor(node.type)}>
