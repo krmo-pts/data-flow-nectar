@@ -88,8 +88,9 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
     setShowAllColumns(!showAllColumns);
   };
   
-  // Optimize rendering for dragging
-  const shouldRenderColumns = expanded && !dragging;
+  // Don't hide columns when dragging - just optimize their rendering
+  // This prevents the jump between collapsed/expanded states
+  const shouldRenderColumns = expanded;
   
   return (
     <div 
@@ -130,14 +131,21 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
         </div>
       </div>
       
-      {/* Columns section - only render when not dragging for better performance */}
+      {/* Columns section - optimize rendering during dragging */}
       {shouldRenderColumns && (
-        <div className="bg-white dark:bg-gray-900">
+        <div className={`bg-white dark:bg-gray-900 ${dragging ? 'opacity-50' : 'opacity-100'}`}>
           {visibleColumns.length > 0 ? (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {visibleColumns.map((column, index) => (
-                <Column key={index} name={column.name} type={column.type} />
-              ))}
+              {/* During dragging, we render simplified placeholders */}
+              {dragging ? (
+                <div className="px-4 py-3">
+                  <div className="h-16 bg-gray-100 dark:bg-gray-800 animate-pulse rounded"></div>
+                </div>
+              ) : (
+                visibleColumns.map((column, index) => (
+                  <Column key={index} name={column.name} type={column.type} />
+                ))
+              )}
             </div>
           ) : (
             <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -145,8 +153,8 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
             </div>
           )}
           
-          {/* Footer controls */}
-          {columns.length > 5 && (
+          {/* Footer controls - hide detailed controls during dragging */}
+          {columns.length > 5 && !dragging && (
             <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
               <button 
                 className="hover:underline flex items-center space-x-1"

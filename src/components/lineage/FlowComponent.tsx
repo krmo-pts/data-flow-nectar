@@ -42,9 +42,9 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
   // Optimize edges rendering based on zoom level and dragging state
   const { visibleEdges, zoom } = useEdgeOptimizer(edges, nodes, isDragging);
 
-  // Determine which edges to show
-  const edgesToRender = isDragging && edges.length > 100 
-    ? visibleEdges // During dragging, show minimal edges
+  // Determine which edges to show - during dragging show fewer edges for performance
+  const edgesToRender = isDragging && edges.length > 50 
+    ? visibleEdges.slice(0, 50) // During dragging, show minimal edges
     : zoom < 0.5 && edges.length > 100 
       ? visibleEdges // When zoomed out with many edges, filter
       : edges; // Otherwise show all edges
@@ -64,7 +64,7 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
       nodesDraggable={true}
       attributionPosition="bottom-right"
-      className="lineage-flow"
+      className={`lineage-flow ${isDragging ? 'is-dragging' : ''}`}
       {...rfOptions}
     >
       <FlowElements

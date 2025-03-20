@@ -55,19 +55,21 @@ const LineageGraph: React.FC = () => {
     // Apply changes to the local state immediately for smooth UI update
     onNodesChange(changes);
     
-    // Detect drag operations by checking for position changes
+    // Find position changes to detect dragging
     const positionChange = changes.find(change => 
       change.type === 'position'
     );
     
-    // If we have a position change, check its dragging status via type assertion
+    // If we have a position change, check its dragging status safely
     if (positionChange && positionChange.type === 'position') {
-      // Update dragging state to optimize rendering during drag
-      setIsDragging(positionChange.dragging === true);
+      // Using optional chaining to safely access the dragging property
+      const isDraggingNow = !!positionChange.dragging;
+      setIsDragging(isDraggingNow);
       
-      // Only update the main state after drag completes to avoid performance issues
-      if (!positionChange.dragging) {
+      // Only update the main state after drag completes
+      if (!isDraggingNow) {
         startTransition(() => {
+          // Update node positions in the main state
           changes.forEach(change => {
             if (change.type === 'position' && change.position) {
               setNodes(prevNodes => 

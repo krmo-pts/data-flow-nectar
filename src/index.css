@@ -232,7 +232,18 @@
   z-index: 10;
 }
 
-/* Reduce rendering load during dragging by simplifying node appearance */
-.react-flow__node.dragging .divide-y > * {
-  border-top-width: 0;
+/* Optimize node rendering during dragging */
+.lineage-flow.is-dragging .react-flow__node:not(.dragging) {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.lineage-flow.is-dragging .react-flow__node.dragging {
+  opacity: 1;
+  z-index: 20;
+}
+
+/* Make column placeholders during dragging subtle */
+.lineage-flow .react-flow__node.dragging .divide-y > * {
+  opacity: 0.5;
 }
