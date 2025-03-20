@@ -16,7 +16,6 @@ import {
   EdgeTypes,
   BackgroundVariant,
   MarkerType,
-  Panel
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -70,8 +69,8 @@ const LineageGraph: React.FC = () => {
     
     // Fit view after a short delay to ensure nodes are rendered
     setTimeout(() => {
-      reactFlowInstance.fitView({ padding: 0.3 });
-    }, 100);
+      reactFlowInstance.fitView({ padding: 0.2 });
+    }, 50);
   }, [reactFlowInstance, setEdges, setNodes]);
 
   useEffect(() => {
@@ -121,20 +120,10 @@ const LineageGraph: React.FC = () => {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        minZoom={0.2}
-        maxZoom={2}
         snapToGrid={true}
-        snapGrid={[20, 20]}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
         attributionPosition="bottom-right"
       >
-        <Background 
-          variant={BackgroundVariant.Dots} 
-          gap={20} 
-          size={1} 
-          color="#e2e8f0" 
-          style={{ opacity: 0.6 }}
-        />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         <Controls className="glass-panel" />
         <MiniMap
           nodeColor={(node) => {
@@ -151,16 +140,7 @@ const LineageGraph: React.FC = () => {
           }}
           maskColor="rgba(240, 240, 250, 0.1)"
           className="glass-panel"
-          zoomable
-          pannable
         />
-        
-        <Panel position="top-left" className="glass-panel rounded-md p-3 m-3">
-          <h3 className="text-sm font-medium mb-2">Data Lineage</h3>
-          <div className="text-xs text-gray-500">
-            Visualizing dependencies and relationships between data assets
-          </div>
-        </Panel>
         
         <SearchPanel 
           searchQuery={searchQuery}

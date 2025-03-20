@@ -1,85 +1,168 @@
 
-import { Edge, Node, Position, MarkerType } from 'reactflow';
 import { NodeData, EdgeData } from '@/types/lineage';
+import { Node, Edge, MarkerType } from 'reactflow';
 
-/**
- * Calculate initial layout for the lineage graph
- */
 export const calculateInitialLayout = (
   nodes: NodeData[],
   edges: EdgeData[]
-): { flowNodes: Node<NodeData>[]; flowEdges: Edge<EdgeData>[]; } => {
-  const flowNodes: Node<NodeData>[] = [];
-  const nodeMap = new Map<string, Node<NodeData>>();
+): { flowNodes: Node[], flowEdges: Edge[] } => {
+  // Create a map of node IDs to track dependencies
+  const nodeMap = new Map();
+  const incomingEdges = new Map();
+  const outgoingEdges = new Map();
   
-  // First pass: create nodes and store in the map
-  nodes.forEach((node, index) => {
-    // Position nodes in a grid layout initially
-    const rows = Math.ceil(Math.sqrt(nodes.length));
-    const cols = Math.ceil(nodes.length / rows);
-    
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    
-    // Space nodes evenly in a grid
-    const xSpacing = 400;
-    const ySpacing = 300;
-    
-    const x = col * xSpacing;
-    const y = row * ySpacing;
-    
-    const flowNode: Node<NodeData> = {
-      id: node.id,
-      type: 'default',
-      position: { x, y },
-      data: { ...node },
-    };
-    
-    flowNodes.push(flowNode);
-    nodeMap.set(node.id, flowNode);
+  // Initialize maps
+  nodes.forEach(node => {
+    nodeMap.set(node.id, node);
+    incomingEdges.set(node.id, []);
+    outgoingEdges.set(node.id, []);
   });
   
-  // Adjust positions to avoid node overlaps
-  const nodesWithLevels = assignLevels(flowNodes, edges);
-  const levelGroups = groupNodesByLevel(nodesWithLevels);
-  
-  // Position nodes by level
-  positionNodesByLevel(levelGroups);
-  
-  // Handle edges
-  const flowEdges: Edge<EdgeData>[] = edges.map((edge) => {
-    const sourceNode = nodeMap.get(edge.source);
-    const targetNode = nodeMap.get(edge.target);
-    
-    // Default position if nodes not found
-    let sourcePosition = Position.Right;
-    let targetPosition = Position.Left;
-    
-    // Determine source and target positions based on node placement
-    if (sourceNode && targetNode) {
-      if (sourceNode.position.y > targetNode.position.y + 100) {
-        sourcePosition = Position.Top;
-        targetPosition = Position.Bottom;
-      } else if (sourceNode.position.y < targetNode.position.y - 100) {
-        sourcePosition = Position.Bottom;
-        targetPosition = Position.Top;
-      } else if (sourceNode.position.x < targetNode.position.x) {
-        sourcePosition = Position.Right;
-        targetPosition = Position.Left;
-      } else {
-        sourcePosition = Position.Left;
-        targetPosition = Position.Right;
-      }
+  // Map connections between nodes
+  edges.forEach(edge => {
+    if (outgoingEdges.has(edge.source)) {
+      outgoingEdges.get(edge.source).push(edge.target);
     }
     
+    if (incomingEdges.has(edge.target)) {
+      incomingEdges.get(edge.target).push(edge.source);
+    }
+  });
+  
+  // Calculate node levels based on dependencies
+  const nodeLevels = new Map();
+  const calculateLevel = (nodeId: string, visited = new Set<string>()): number => {
+    // Prevent infinite loops with circular dependencies
+    if (visited.has(nodeId)) return 0;
+    
+    visited.add(nodeId);
+    
+    // If node has no incoming edges, it's a source node (level 0)
+    const incoming = incomingEdges.get(nodeId) || [];
+    if (incoming.length === 0) return 0;
+    
+    // Node level is 1 + max level of all its dependencies
+    let maxLevel = 0;
+    for (const sourceId of incoming) {
+      const sourceLevel = nodeLevels.has(sourceId) 
+        ? nodeLevels.get(sourceId) 
+        : calculateLevel(sourceId, new Set(visited));
+      maxLevel = Math.max(maxLevel, sourceLevel);
+    }
+    
+    return maxLevel + 1;
+  };
+  
+  // Calculate levels for all nodes
+  nodes.forEach(node => {
+    if (!nodeLevels.has(node.id)) {
+      nodeLevels.set(node.id, calculateLevel(node.id));
+    }
+  });
+  
+  // Group nodes by their level
+  const nodesByLevel = new Map();
+  nodeLevels.forEach((level, nodeId) => {
+    if (!nodesByLevel.has(level)) {
+      nodesByLevel.set(level, []);
+    }
+    nodesByLevel.get(level).push(nodeId);
+  });
+  
+  // Sort nodes within each level to minimize edge crossings
+  const sortedLevels = Array.from(nodesByLevel.keys()).sort((a, b) => a - b);
+  
+  // First pass: Order nodes within each level to minimize crossings
+  sortedLevels.forEach((level, levelIndex) => {
+    if (levelIndex === 0) return; // No need to sort the first level
+    
+    const nodesInLevel = nodesByLevel.get(level);
+    const prevLevelNodes = nodesByLevel.get(sortedLevels[levelIndex - 1]);
+    
+    // Order nodes based on the average position of their parent nodes
+    nodesInLevel.sort((nodeIdA, nodeIdB) => {
+      const parentsA = incomingEdges.get(nodeIdA) || [];
+      const parentsB = incomingEdges.get(nodeIdB) || [];
+      
+      // Calculate the average index of parent nodes for each node
+      const avgParentIndexA = parentsA.length ? 
+        parentsA.reduce((sum, parentId) => sum + prevLevelNodes.indexOf(parentId), 0) / parentsA.length : 
+        Number.MAX_SAFE_INTEGER;
+      
+      const avgParentIndexB = parentsB.length ? 
+        parentsB.reduce((sum, parentId) => sum + prevLevelNodes.indexOf(parentId), 0) / parentsB.length : 
+        Number.MAX_SAFE_INTEGER;
+      
+      return avgParentIndexA - avgParentIndexB;
+    });
+  });
+  
+  // Position nodes based on their level and order
+  const levelWidth = 250; // Horizontal spacing between levels
+  const nodeHeight = 120; // Estimated node height - Define nodeHeight here at this scope
+  const nodePositions: Record<string, { x: number; y: number }> = {};
+  
+  sortedLevels.forEach((level) => {
+    const nodesInLevel = nodesByLevel.get(level) || [];
+    const totalHeight = nodesInLevel.length * nodeHeight;
+    const startY = -totalHeight / 2; // Center vertically
+    
+    nodesInLevel.forEach((nodeId, index) => {
+      // Use more precise vertical positioning to reduce overlaps
+      nodePositions[nodeId] = {
+        x: level * levelWidth,
+        y: startY + index * nodeHeight,
+      };
+    });
+  });
+  
+  // Second pass: Apply minimal adjustments to reduce remaining edge crossings
+  edges.forEach(edge => {
+    const sourcePos = nodePositions[edge.source];
+    const targetPos = nodePositions[edge.target];
+    
+    if (sourcePos && targetPos) {
+      // If nodes are at adjacent levels but have a significant y-distance,
+      // slightly adjust their positions to reduce the crossing angle
+      const sourceLevel = nodeLevels.get(edge.source);
+      const targetLevel = nodeLevels.get(edge.target);
+      
+      if (targetLevel - sourceLevel === 1 && Math.abs(sourcePos.y - targetPos.y) > nodeHeight) {
+        // Small adjustment to make edges more horizontal when possible
+        const adjustment = 20;
+        if (sourcePos.y < targetPos.y) {
+          sourcePos.y += adjustment;
+          targetPos.y -= adjustment;
+        } else {
+          sourcePos.y -= adjustment;
+          targetPos.y += adjustment;
+        }
+      }
+    }
+  });
+  
+  // Create React Flow nodes with positioned data
+  const flowNodes = nodes.map((node) => {
+    const position = nodePositions[node.id] || { x: Math.random() * 500, y: Math.random() * 500 };
+    
     return {
-      id: `${edge.source}-${edge.target}`,
+      id: node.id,
+      type: 'default',
+      position,
+      data: { ...node },
+      className: `node-${node.type}`,
+    };
+  });
+  
+  // Create edges with marker end and data
+  const flowEdges = edges.map((edge) => {
+    return {
+      id: edge.id,
       source: edge.source,
       target: edge.target,
-      sourceHandle: sourcePosition,
-      targetHandle: targetPosition,
+      data: edge,
       type: 'default',
-      data: { ...edge },
+      animated: false,
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 15,
@@ -88,115 +171,6 @@ export const calculateInitialLayout = (
       },
     };
   });
-  
+
   return { flowNodes, flowEdges };
-};
-
-/**
- * Assign depth levels to nodes based on edge connections
- */
-const assignLevels = (nodes: Node<NodeData>[], edges: EdgeData[]): Node<NodeData>[] => {
-  const nodeMap = new Map<string, Node<NodeData> & { level?: number }>();
-  
-  // Initialize the map
-  nodes.forEach(node => {
-    nodeMap.set(node.id, { ...node, level: 0 });
-  });
-  
-  // Create adjacency list for topological sorting
-  const graph: Record<string, string[]> = {};
-  const inDegree: Record<string, number> = {};
-  
-  // Initialize
-  nodes.forEach(node => {
-    graph[node.id] = [];
-    inDegree[node.id] = 0;
-  });
-  
-  // Build the graph
-  edges.forEach(edge => {
-    if (graph[edge.source]) {
-      graph[edge.source].push(edge.target);
-      inDegree[edge.target] = (inDegree[edge.target] || 0) + 1;
-    }
-  });
-  
-  // Find source nodes (nodes with no incoming edges)
-  const sourceNodes: string[] = [];
-  nodes.forEach(node => {
-    if (inDegree[node.id] === 0) {
-      sourceNodes.push(node.id);
-    }
-  });
-  
-  // Perform BFS to assign levels
-  const queue = [...sourceNodes];
-  
-  while (queue.length > 0) {
-    const nodeId = queue.shift();
-    if (!nodeId) continue;
-    
-    const node = nodeMap.get(nodeId);
-    const currentLevel = node?.level || 0;
-    
-    // Add all adjacent nodes to queue and update their level
-    const neighbors = graph[nodeId] || [];
-    neighbors.forEach(neighborId => {
-      const neighbor = nodeMap.get(neighborId);
-      if (neighbor) {
-        // Set neighbor level to be at least one level more than current node
-        neighbor.level = Math.max((neighbor.level || 0), currentLevel + 1);
-      }
-      
-      // Decrease in-degree of neighbor
-      inDegree[neighborId]--;
-      
-      // If in-degree becomes 0, add to queue
-      if (inDegree[neighborId] === 0) {
-        queue.push(neighborId);
-      }
-    });
-  }
-  
-  // Return nodes with levels
-  return Array.from(nodeMap.values());
-};
-
-/**
- * Group nodes by their level
- */
-const groupNodesByLevel = (nodes: (Node<NodeData> & { level?: number })[]): Record<number, Node<NodeData>[]> => {
-  const levelGroups: Record<number, Node<NodeData>[]> = {};
-  
-  nodes.forEach(node => {
-    const level = node.level || 0;
-    if (!levelGroups[level]) {
-      levelGroups[level] = [];
-    }
-    levelGroups[level].push(node);
-  });
-  
-  return levelGroups;
-};
-
-/**
- * Position nodes by their level
- */
-const positionNodesByLevel = (levelGroups: Record<number, Node<NodeData>[]>): void => {
-  const levelSpacing = 400; // Horizontal spacing between levels
-  const nodeSpacing = 250;  // Vertical spacing between nodes in the same level
-  
-  Object.entries(levelGroups).forEach(([levelStr, nodes]) => {
-    const level = parseInt(levelStr, 10);
-    const x = level * levelSpacing + 50;
-    
-    nodes.forEach((node, index) => {
-      // Center nodes vertically
-      const totalHeight = nodes.length * nodeSpacing;
-      const startY = -totalHeight / 2 + nodeSpacing / 2;
-      const y = startY + index * nodeSpacing;
-      
-      node.position = { x, y };
-    });
-  });
 };

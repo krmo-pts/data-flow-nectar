@@ -9,6 +9,7 @@ import {
   BarChart3,
   Server,
   Cloud,
+  ArrowRight,
   Grid,
   Eye,
   EyeOff,
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react';
 
 const getPlatformIcon = (platform: string) => {
-  switch (platform?.toLowerCase()) {
+  switch (platform) {
     case 'postgres':
     case 'oracle':
     case 'mysql':
@@ -65,17 +66,9 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
   const toggleShowAll = () => setShowAllColumns(!showAllColumns);
   
   return (
-    <>
-      {/* Header section with handles */}
-      <div className="relative border-b border-gray-200 px-4 py-2 bg-gray-50 flex items-center justify-between rounded-t-lg">
-        {/* Left handle for incoming connections */}
-        <Handle 
-          id="header"
-          type="target" 
-          position={Position.Left} 
-          className="w-3 h-3 rounded-full border-2 bg-background border-primary -ml-1.5" 
-        />
-        
+    <div className={`shadow-md rounded-lg overflow-hidden bg-white transition-all duration-200 ${selected ? 'ring-2 ring-primary/40' : ''}`} style={{ minWidth: '240px' }}>
+      {/* Header section */}
+      <div className="border-b border-gray-200 px-4 py-2 bg-gray-50 flex items-center justify-between">
         <div className="flex items-center space-x-2 text-sm text-gray-700">
           {getPlatformIcon(data.platform)}
           <div className="flex flex-col">
@@ -98,19 +91,11 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
             <Grid size={16} />
           </button>
         </div>
-        
-        {/* Right handle for outgoing connections */}
-        <Handle 
-          id="header"
-          type="source" 
-          position={Position.Right} 
-          className="w-3 h-3 rounded-full border-2 bg-background border-primary -mr-1.5" 
-        />
       </div>
       
       {/* Columns section */}
       {expanded && (
-        <div className="bg-white rounded-b-lg">
+        <div className="bg-white">
           {visibleColumns.length > 0 ? (
             <div className="divide-y divide-gray-100">
               {visibleColumns.map((column, index) => (
@@ -128,7 +113,7 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
           
           {/* Footer controls */}
           {columns.length > 5 && (
-            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600 rounded-b-lg">
+            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600">
               <button 
                 className="hover:underline flex items-center space-x-1"
                 onClick={toggleShowAll}
@@ -153,7 +138,19 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
           )}
         </div>
       )}
-    </>
+      
+      {/* Handles for connections */}
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
+      />
+    </div>
   );
 };
 
