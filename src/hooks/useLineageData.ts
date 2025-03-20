@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Node, Edge } from 'reactflow';
-import { NodeData, EdgeData } from '@/types/lineage';
+import { NodeData, EdgeData, ImpactType } from '@/types/lineage';
 import { mockLineageData } from '@/data/mockLineageData';
 import { mockLargeLineageData, mockVeryLargeLineageData } from '@/data/mockLargeLineageData';
 import { calculateInitialLayout } from '@/utils/lineageLayout';
@@ -109,37 +109,220 @@ export function useLineageData() {
     initialLayout();
   }, [initialLayout]);
 
-  // New function to set a focus node
+  // Helper function to trace upstream dependencies (recursively)
+  const traceUpstreamDependencies = useCallback((
+    nodeId: string,
+    nodeMap: Map<string, NodeData>,
+    incomingEdgesMap: Map<string, string[]>,
+    outgoingEdgesMap: Map<string, string[]>,
+    edgesMap: Map<string, EdgeData>,
+    distance: number = 1,
+    visited: Set<string> = new Set()
+  ): string[] => {
+    if (visited.has(nodeId)) return [];
+    visited.add(nodeId);
+    
+    const upstreamNodeIds = incomingEdgesMap.get(nodeId) || [];
+    let allUpstream: string[] = [...upstreamNodeIds];
+    
+    for (const upstreamId of upstreamNodeIds) {
+      // Mark the upstream node and edge as part of the impact analysis
+      if (nodeMap.has(upstreamId)) {
+        const upstreamNode = nodeMap.get(upstreamId)!;
+        upstreamNode.impactType = 'upstream';
+        upstreamNode.impactDistance = distance;
+      }
+      
+      // Mark the connecting edge
+      const edgeKey = `${upstreamId}->${nodeId}`;
+      if (edgesMap.has(edgeKey)) {
+        const edge = edgesMap.get(edgeKey)!;
+        edge.isImpactPath = true;
+      }
+      
+      // Recursively trace further upstream
+      const furtherUpstream = traceUpstreamDependencies(
+        upstreamId, 
+        nodeMap, 
+        incomingEdgesMap, 
+        outgoingEdgesMap, 
+        edgesMap, 
+        distance + 1,
+        visited
+      );
+      allUpstream = [...allUpstream, ...furtherUpstream];
+    }
+    
+    return allUpstream;
+  }, []);
+
+  // Helper function to trace downstream dependencies (recursively)
+  const traceDownstreamDependencies = useCallback((
+    nodeId: string,
+    nodeMap: Map<string, NodeData>,
+    incomingEdgesMap: Map<string, string[]>,
+    outgoingEdgesMap: Map<string, string[]>,
+    edgesMap: Map<string, EdgeData>,
+    distance: number = 1,
+    visited: Set<string> = new Set()
+  ): string[] => {
+    if (visited.has(nodeId)) return [];
+    visited.add(nodeId);
+    
+    const downstreamNodeIds = outgoingEdgesMap.get(nodeId) || [];
+    let allDownstream: string[] = [...downstreamNodeIds];
+    
+    for (const downstreamId of downstreamNodeIds) {
+      // Mark the downstream node and edge as part of the impact analysis
+      if (nodeMap.has(downstreamId)) {
+        const downstreamNode = nodeMap.get(downstreamId)!;
+        downstreamNode.impactType = 'downstream';
+        downstreamNode.impactDistance = distance;
+      }
+      
+      // Mark the connecting edge
+      const edgeKey = `${nodeId}->${downstreamId}`;
+      if (edgesMap.has(edgeKey)) {
+        const edge = edgesMap.get(edgeKey)!;
+        edge.isImpactPath = true;
+      }
+      
+      // Recursively trace further downstream
+      const furtherDownstream = traceDownstreamDependencies(
+        downstreamId, 
+        nodeMap, 
+        incomingEdgesMap, 
+        outgoingEdgesMap, 
+        edgesMap, 
+        distance + 1,
+        visited
+      );
+      allDownstream = [...allDownstream, ...furtherDownstream];
+    }
+    
+    return allDownstream;
+  }, []);
+
+  // Enhanced function to set focus on a node with dependency analysis
   const setFocusNode = useCallback((nodeId: string) => {
     setNodes(prevNodes => {
-      return prevNodes.map(node => {
-        // First, clear focus from all nodes
-        const newData = { ...node.data, isFocus: false };
-        
-        // Then set focus on the selected node
-        if (node.id === nodeId) {
-          newData.isFocus = true;
+      // Create maps for quick lookup
+      const nodeMap = new Map<string, NodeData>();
+      const incomingEdgesMap = new Map<string, string[]>();
+      const outgoingEdgesMap = new Map<string, string[]>();
+      
+      // Reset all previous impact analysis data
+      prevNodes.forEach(node => {
+        const nodeData = { ...node.data };
+        nodeData.isFocus = false;
+        nodeData.impactType = 'none';
+        nodeData.impactDistance = undefined;
+        nodeMap.set(node.id, nodeData);
+        incomingEdgesMap.set(node.id, []);
+        outgoingEdgesMap.set(node.id, []);
+      });
+      
+      // Create edge map for dependency tracing
+      const edgesMap = new Map<string, EdgeData>();
+      setEdges(prevEdges => {
+        const newEdges = prevEdges.map(edge => {
+          const edgeData = { ...edge.data, isImpactPath: false };
+          const edgeKey = `${edge.source}->${edge.target}`;
+          edgesMap.set(edgeKey, edgeData);
           
-          // Zoom to the focused node
-          setTimeout(() => {
-            reactFlowInstance.setCenter(node.position.x, node.position.y, { duration: 800, zoom: 1.5 });
-          }, 50);
+          // Update our edge connection maps
+          if (incomingEdgesMap.has(edge.target)) {
+            incomingEdgesMap.get(edge.target)?.push(edge.source);
+          }
+          
+          if (outgoingEdgesMap.has(edge.source)) {
+            outgoingEdgesMap.get(edge.source)?.push(edge.target);
+          }
+          
+          return {
+            ...edge,
+            data: edgeData,
+            animated: false,
+            style: { ...edge.style, strokeWidth: 1.5, opacity: 0.5 }
+          };
+        });
+        return newEdges;
+      });
+
+      // Mark the focus node
+      if (nodeMap.has(nodeId)) {
+        const focusNodeData = nodeMap.get(nodeId)!;
+        focusNodeData.isFocus = true;
+        focusNodeData.impactType = 'direct';
+        focusNodeData.impactDistance = 0;
+        
+        // Trace all upstream and downstream dependencies
+        traceUpstreamDependencies(nodeId, nodeMap, incomingEdgesMap, outgoingEdgesMap, edgesMap);
+        traceDownstreamDependencies(nodeId, nodeMap, incomingEdgesMap, outgoingEdgesMap, edgesMap);
+      }
+      
+      // Update edges with impact path information
+      setEdges(prevEdges => {
+        return prevEdges.map(edge => {
+          const edgeKey = `${edge.source}->${edge.target}`;
+          const edgeData = edgesMap.get(edgeKey);
+          
+          if (edgeData?.isImpactPath) {
+            return {
+              ...edge,
+              data: edgeData,
+              animated: true,
+              style: { 
+                ...edge.style, 
+                strokeWidth: 2, 
+                opacity: 1,
+                stroke: nodeMap.get(edge.source)?.impactType === 'upstream' ? '#3b82f6' : '#ef4444'
+              }
+            };
+          }
+          
+          return edge;
+        });
+      });
+      
+      // Zoom to the focused node (after a short delay to let rendering finish)
+      setTimeout(() => {
+        const focusNode = prevNodes.find(node => node.id === nodeId);
+        if (focusNode) {
+          reactFlowInstance.setCenter(focusNode.position.x, focusNode.position.y, { duration: 800, zoom: 1.5 });
+        }
+      }, 50);
+      
+      // Return updated nodes with dependency analysis
+      return prevNodes.map(node => {
+        const nodeData = nodeMap.get(node.id);
+        if (!nodeData) return node;
+        
+        // Apply styling based on impact relationship
+        let nodeClassName = `node-${nodeData.type}`;
+        
+        if (nodeData.isFocus) {
+          nodeClassName += ' focus-node';
+        } else if (nodeData.impactType === 'upstream') {
+          nodeClassName += ' upstream-node';
+        } else if (nodeData.impactType === 'downstream') {
+          nodeClassName += ' downstream-node';
         }
         
         return {
           ...node,
-          data: newData,
-          className: `node-${node.data.type} ${nodeId === node.id ? 'focus-node' : ''}`
+          data: nodeData,
+          className: nodeClassName
         };
       });
     });
     
     // Notify user
     toast({
-      title: 'Focus set',
-      description: `Focusing on node ${nodeId}`,
+      title: 'Impact Analysis',
+      description: `Analyzing dependencies for node ${nodeId}`,
     });
-  }, [setNodes, reactFlowInstance, toast]);
+  }, [setNodes, reactFlowInstance, toast, traceUpstreamDependencies, traceDownstreamDependencies]);
 
   return {
     nodes,

@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
-import { NodeData, Column } from '@/types/lineage';
-import { X, Target } from 'lucide-react';
+import { NodeData, Column, ImpactType } from '@/types/lineage';
+import { X, Target, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +58,29 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
     }
   };
 
+  const getImpactTypeBadge = (impactType?: ImpactType) => {
+    switch (impactType) {
+      case 'direct':
+        return <Badge variant="outline" className="bg-sky-100 text-sky-800 border-sky-200">Focus Node</Badge>;
+      case 'upstream':
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200 flex items-center gap-1">
+            <ArrowUpCircle size={12} />
+            Upstream Dependency
+          </Badge>
+        );
+      case 'downstream':
+        return (
+          <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 flex items-center gap-1">
+            <ArrowDownCircle size={12} />
+            Downstream Dependency
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   const handleSetFocus = () => {
     if (onSetFocus && node) {
       onSetFocus(node.id);
@@ -79,7 +102,7 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
             <h3 className="text-2xl font-bold text-foreground">{node.name}</h3>
             {onSetFocus && (
               <Button 
-                variant="outline" 
+                variant={node.isFocus ? "default" : "outline"}
                 size="sm" 
                 onClick={handleSetFocus}
                 className="flex items-center gap-1"
@@ -96,6 +119,12 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
             <Badge variant="outline" className={getPlatformColor(node.platform)}>
               {node.platform}
             </Badge>
+            {getImpactTypeBadge(node.impactType)}
+            {node.impactDistance !== undefined && node.impactDistance > 0 && (
+              <Badge variant="outline" className="bg-gray-100 text-gray-800">
+                {node.impactDistance} {node.impactDistance === 1 ? 'step' : 'steps'} from focus
+              </Badge>
+            )}
           </div>
           {node.description && (
             <p className="text-sm text-muted-foreground">{node.description}</p>

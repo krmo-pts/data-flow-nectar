@@ -64,3 +64,59 @@
   border-style: solid;
   border-color: transparent transparent rgba(56, 189, 248, 0.6) transparent;
 }
+
+/* Upstream dependencies styling */
+.upstream-node {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+  z-index: 40 !important;
+}
+
+.upstream-node::after {
+  content: '⬆️';
+  position: absolute;
+  top: -18px;
+  right: 5px;
+  font-size: 12px;
+}
+
+/* Downstream dependencies styling */
+.downstream-node {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5) !important;
+  z-index: 40 !important;
+}
+
+.downstream-node::after {
+  content: '⬇️';
+  position: absolute;
+  top: -18px;
+  right: 5px;
+  font-size: 12px;
+}
+
+/* Impact styling based on distance */
+.react-flow__node[data-impact-distance="1"] {
+  opacity: 0.95;
+}
+
+.react-flow__node[data-impact-distance="2"] {
+  opacity: 0.85;
+}
+
+.react-flow__node[data-impact-distance="3"] {
+  opacity: 0.75;
+}
+
+.react-flow__node[data-impact-distance="4"] {
+  opacity: 0.65;
+}
+
+/* Fade out nodes not in the impact path */
+.react-flow.has-focus-node .react-flow__node:not(.focus-node):not(.upstream-node):not(.downstream-node) {
+  opacity: 0.3;
+  filter: grayscale(70%);
+}
+
+/* Fade out edges not in the impact path */
+.react-flow.has-focus-node .react-flow__edge:not(.impact-path-edge) {
+  opacity: 0.15;
+}

@@ -14,6 +14,8 @@ export type PlatformType =
   | 'gcp' 
   | 'other';
 
+export type ImpactType = 'upstream' | 'downstream' | 'direct' | 'none';
+
 export interface Column {
   name: string;
   type: string;
@@ -34,7 +36,9 @@ export interface NodeData {
   level?: number; // Optional level property for hierarchical layouts
   parentIds?: string[]; // Optional array of parent node IDs
   childIds?: string[]; // Optional array of child node IDs
-  isFocus?: boolean; // New property to mark this as the focus node
+  isFocus?: boolean; // Property to mark this as the focus node
+  impactType?: ImpactType; // New property to mark impact relationship to focus node
+  impactDistance?: number; // How many nodes away from the focus node
 }
 
 export interface EdgeData {
@@ -44,6 +48,7 @@ export interface EdgeData {
   label?: string;
   description?: string;
   transformationType?: string;
+  isImpactPath?: boolean; // New property to highlight edges in the impact path
 }
 
 export interface LineageData {
