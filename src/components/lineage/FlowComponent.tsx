@@ -1,13 +1,8 @@
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
   Connection,
-  Edge,
-  BackgroundVariant,
   MarkerType,
   NodeTypes,
   EdgeTypes,
@@ -17,6 +12,9 @@ import BaseNode from './nodes/BaseNode';
 import CustomEdge from './edges/CustomEdge';
 import SearchPanel from './SearchPanel';
 import ControlPanel from './ControlPanel';
+import FlowMiniMap from './FlowMiniMap';
+import FlowControls from './FlowControls';
+import FlowBackground from './FlowBackground';
 
 interface FlowComponentProps {
   nodes: any[];
@@ -72,24 +70,9 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       attributionPosition="bottom-right"
       className="lineage-flow"
     >
-      <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-      <Controls className="glass-panel" />
-      <MiniMap
-        nodeColor={(node) => {
-          switch (node.data.type) {
-            case 'table':
-              return '#dbeafe';
-            case 'task':
-              return '#dcfce7';
-            case 'report':
-              return '#f3e8ff';
-            default:
-              return '#f1f5f9';
-          }
-        }}
-        maskColor="rgba(240, 240, 250, 0.1)"
-        className="glass-panel"
-      />
+      <FlowBackground />
+      <FlowControls />
+      <FlowMiniMap />
       
       <SearchPanel 
         searchQuery={searchQuery}
