@@ -2,8 +2,7 @@
 import React, { memo } from 'react';
 import { NodeData } from '@/types/lineage';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import NodeDetailsHeader from './node-details/NodeDetailsHeader';
-import NodeDetailsContent from './node-details/NodeDetailsContent';
+import NodeDetailsContainer from './node-details/NodeDetailsContainer';
 
 interface NodeDetailsPanelProps {
   node: NodeData | null;
@@ -30,15 +29,12 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
         onInteractOutside={onClose}
         hideCloseButton={true}
       >
-        <div className="h-full flex flex-col">
-          <NodeDetailsHeader 
-            node={node} 
-            onClose={onClose} 
-            onSetFocus={onSetFocus}
-            isAnalyzing={isAnalyzing}
-          />
-          <NodeDetailsContent node={node} />
-        </div>
+        <NodeDetailsContainer
+          node={node}
+          onClose={onClose}
+          onSetFocus={onSetFocus}
+          isAnalyzing={isAnalyzing}
+        />
       </SheetContent>
     </Sheet>
   );
