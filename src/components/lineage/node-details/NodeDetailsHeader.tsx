@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Target, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,16 @@ const NodeDetailsHeader: React.FC<NodeDetailsHeaderProps> = ({
   // Add local state to track focused state immediately
   const [isLocalFocus, setIsLocalFocus] = useState(node.isFocus);
 
+  // Update local state when node props change
+  useEffect(() => {
+    setIsLocalFocus(node.isFocus);
+  }, [node.isFocus]);
+
   const handleSetFocus = () => {
     if (onSetFocus) {
-      // Update local state immediately
-      setIsLocalFocus(true);
+      // Toggle focus state
+      const newFocusState = !isLocalFocus;
+      setIsLocalFocus(newFocusState);
       onSetFocus(node.id);
     }
   };
@@ -46,18 +52,18 @@ const NodeDetailsHeader: React.FC<NodeDetailsHeaderProps> = ({
             <h3 className="text-2xl font-bold text-foreground">{node.name}</h3>
             {onSetFocus && (
               <Button 
-                variant={isLocalFocus || node.isFocus ? "default" : "outline"}
+                variant={isLocalFocus ? "default" : "outline"}
                 size="sm" 
                 onClick={handleSetFocus}
                 className="flex items-center gap-1"
-                disabled={isAnalyzing || isLocalFocus}
+                disabled={isAnalyzing}
               >
                 {isAnalyzing ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
                     <span>Analyzing...</span>
                   </>
-                ) : isLocalFocus || node.isFocus ? (
+                ) : isLocalFocus ? (
                   <>
                     <Target size={14} />
                     <span>Focused</span>

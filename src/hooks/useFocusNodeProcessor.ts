@@ -5,7 +5,7 @@ import { NodeData, EdgeData } from '@/types/lineage';
 import { traceUpstreamDependencies, traceDownstreamDependencies } from '@/utils/lineage/dependencyTracing';
 import { updateEdgesWithImpactPath } from '@/utils/lineage/edgeUpdates';
 import { updateNodesWithAnalysisResults, zoomToFocusNode } from '@/utils/lineage/nodeUpdates';
-import { type ToastProps } from '@/hooks/use-toast';
+import { type ToastProps } from '@/hooks/toast/types';
 
 /**
  * Hook for processing focus node updates
