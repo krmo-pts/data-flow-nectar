@@ -51,7 +51,7 @@ const LineageGraph: React.FC = () => {
     setEdgesState(edges);
   }, [edges, setEdgesState]);
 
-  // More efficient node position update with drag handling
+  // Handle node changes with improved drag detection
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
     // Apply changes to the local state immediately for smooth UI update
     onNodesChange(changes);
@@ -81,7 +81,7 @@ const LineageGraph: React.FC = () => {
     }
   }, [onNodesChange, setNodes]);
 
-  // More efficient edge updates - skip during dragging for better performance
+  // Handle edge changes - skip during dragging for better performance
   const handleEdgesChange = useCallback((changes: EdgeChange[]) => {
     // Apply changes to the local state immediately
     onEdgesChange(changes);

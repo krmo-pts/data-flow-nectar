@@ -49,7 +49,6 @@
   height: auto !important;
   min-width: 240px;
   cursor: pointer;
-  contain: layout style paint; /* Add contain for better performance */
 }
 
 .lineage-flow .react-flow__node.selected .shadow-md {

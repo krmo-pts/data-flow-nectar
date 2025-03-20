@@ -93,8 +93,7 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
       className={`shadow-md rounded-lg overflow-hidden ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''}`} 
       style={{ 
         minWidth: '240px', 
-        cursor: 'move',
-        willChange: dragging ? 'transform' : 'auto'
+        cursor: 'move'
       }}
     >
       {/* Header section */}
@@ -131,19 +130,9 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
         <div className={`bg-white dark:bg-gray-900`}>
           {visibleColumns.length > 0 ? (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {dragging ? (
-                // During dragging, show simplified content but maintain height
-                <div className="px-4 py-2">
-                  {Array.from({ length: Math.min(visibleColumns.length, 5) }).map((_, i) => (
-                    <div key={i} className="h-8 my-1 bg-gray-100 dark:bg-gray-800 rounded"></div>
-                  ))}
-                </div>
-              ) : (
-                // Normal rendering when not dragging
-                visibleColumns.map((column, index) => (
-                  <Column key={index} name={column.name} type={column.type} />
-                ))
-              )}
+              {visibleColumns.map((column, index) => (
+                <Column key={index} name={column.name} type={column.type} />
+              ))}
             </div>
           ) : (
             <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -151,8 +140,8 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
             </div>
           )}
           
-          {/* Footer controls - simplified during dragging */}
-          {columns.length > 5 && !dragging && (
+          {/* Footer controls */}
+          {columns.length > 5 && (
             <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
               <button 
                 className="hover:underline flex items-center space-x-1"
