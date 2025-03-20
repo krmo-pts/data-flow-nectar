@@ -59,7 +59,7 @@ const LineageGraph: React.FC = () => {
         setNodes(prevNodes => 
           prevNodes.map(node => 
             node.id === change.id 
-              ? { ...node, position: change.position }
+              ? { ...node, position: change.position || node.position }
               : node
           )
         );
