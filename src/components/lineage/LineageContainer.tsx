@@ -4,12 +4,20 @@ import LineageGraph from './LineageGraph';
 import { ReactFlowProvider } from 'reactflow';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const LineageContainer: React.FC = () => {
   const [key, setKey] = useState(0);
   
   const resetLayout = () => {
     setKey(prevKey => prevKey + 1);
+    
+    // Show a toast notification using the correct properties from the Toast type
+    toast({
+      title: "Layout Reset",
+      description: "The graph layout has been reset to its initial state.",
+      variant: "default",
+    });
   };
 
   return (
