@@ -1,7 +1,6 @@
 
 import React from 'react';
 import FlowBackground from '../FlowBackground';
-import FlowControls from '../FlowControls';
 import FlowMiniMap from '../FlowMiniMap';
 import SearchPanel from '../SearchPanel';
 import ControlPanel from '../ControlPanel';
@@ -34,7 +33,7 @@ const FlowElements: React.FC<FlowElementsProps> = ({
   return (
     <>
       <FlowBackground />
-      <FlowControls />
+      {/* Removed FlowControls component to eliminate duplication */}
       <FlowMiniMap />
       
       <SearchPanel 
