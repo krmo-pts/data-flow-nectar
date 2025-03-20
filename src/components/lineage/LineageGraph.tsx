@@ -55,28 +55,32 @@ const LineageGraph: React.FC = () => {
     // Apply changes to the local state immediately for smooth UI update
     onNodesChange(changes);
     
-    // Detect drag operations
-    const dragChange = changes.find(change => change.type === 'position' && change.dragging !== undefined);
-    if (dragChange) {
-      // Update dragging state to optimize rendering during drag
-      setIsDragging(dragChange.dragging === true);
-    }
+    // Detect drag operations by checking for position changes
+    const positionChange = changes.find(change => 
+      change.type === 'position'
+    );
     
-    // Only update the main state after drag completes to avoid performance issues
-    if (!dragChange?.dragging) {
-      startTransition(() => {
-        changes.forEach(change => {
-          if (change.type === 'position' && change.position) {
-            setNodes(prevNodes => 
-              prevNodes.map(node => 
-                node.id === change.id 
-                  ? { ...node, position: change.position || node.position }
-                  : node
-              )
-            );
-          }
+    // If we have a position change, check its dragging status via type assertion
+    if (positionChange && positionChange.type === 'position') {
+      // Update dragging state to optimize rendering during drag
+      setIsDragging(positionChange.dragging === true);
+      
+      // Only update the main state after drag completes to avoid performance issues
+      if (!positionChange.dragging) {
+        startTransition(() => {
+          changes.forEach(change => {
+            if (change.type === 'position' && change.position) {
+              setNodes(prevNodes => 
+                prevNodes.map(node => 
+                  node.id === change.id 
+                    ? { ...node, position: change.position || node.position }
+                    : node
+                )
+              );
+            }
+          });
         });
-      });
+      }
     }
   }, [onNodesChange, setNodes]);
 
