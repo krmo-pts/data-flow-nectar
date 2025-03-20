@@ -66,17 +66,16 @@ const LineageGraph: React.FC = () => {
       const wasDragging = isDragging;
       const isDraggingNow = !!positionChange.dragging;
       
-      console.log('Node drag state:', {
-        nodeId: positionChange.id,
-        position: positionChange.position,
-        isDragging: isDraggingNow,
-        wasDragging: wasDragging,
-        changeType: positionChange.dragging ? 'dragging' : 'drag ended'
-      });
+      if (wasDragging !== isDraggingNow) {
+        console.log('Node drag state changed:', {
+          nodeId: positionChange.id,
+          isDragging: isDraggingNow,
+          wasDragging: wasDragging
+        });
+        setIsDragging(isDraggingNow);
+      }
       
-      setIsDragging(isDraggingNow);
-      
-      // Only update the main state after drag completes
+      // Only update the main state after drag completes to avoid excessive updates
       if (!positionChange.dragging && positionChange.position) {
         console.log('Finalizing node position after drag:', {
           nodeId: positionChange.id,
@@ -106,20 +105,17 @@ const LineageGraph: React.FC = () => {
     if (!isDragging) {
       startTransition(() => {
         setEdges(prev => {
-          const nextEdges = [...prev];
-          changes.forEach(change => {
-            if (change.type === 'remove') {
-              const index = nextEdges.findIndex(edge => edge.id === change.id);
-              if (index !== -1) {
-                nextEdges.splice(index, 1);
-              }
-            }
-          });
-          return nextEdges;
+          // Only handle removal changes to avoid unnecessary updates
+          if (changes.some(change => change.type === 'remove')) {
+            return prev.filter(edge => 
+              !changes.some(change => 
+                change.type === 'remove' && change.id === edge.id
+              )
+            );
+          }
+          return prev;
         });
       });
-    } else {
-      console.log('Skipping edge updates during dragging for performance');
     }
   }, [onEdgesChange, setEdges, isDragging]);
 
@@ -165,9 +161,23 @@ const LineageGraph: React.FC = () => {
     resetPanels();
   }, [resetView, resetPanels]);
 
+  // Add loading overlay during dragging with large datasets
+  const showDraggingOverlay = useMemo(() => {
+    return isDragging && (datasetSize === 'large' || datasetSize === 'veryLarge') && edges.length > 300;
+  }, [isDragging, datasetSize, edges.length]);
+
   return (
     <div className="w-full h-full relative">
       <LoadingOverlay isVisible={isLoading} datasetSize={datasetSize} />
+      
+      {showDraggingOverlay && (
+        <div className="absolute top-16 right-4 z-50 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-sm border border-border">
+          <div className="text-xs text-muted-foreground">
+            Optimizing rendering during drag operation...
+          </div>
+        </div>
+      )}
+      
       <DatasetToggle 
         datasetSize={datasetSize} 
         setDatasetSize={setDatasetSize} 
