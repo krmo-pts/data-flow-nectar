@@ -1,4 +1,3 @@
-
 import React, { memo, useEffect, useRef } from 'react';
 import { NodeData, Column, ImpactType } from '@/types/lineage';
 import { X, Target, ArrowUpCircle, ArrowDownCircle, Loader2 } from 'lucide-react';
@@ -96,6 +95,7 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
         side="right" 
         className="w-[400px] p-0 max-w-[min(420px,_calc(100vw_-_40px))] border-border h-[calc(100vh-32px)] my-4 mr-4 rounded-md overflow-hidden"
         onInteractOutside={onClose}
+        hideCloseButton={true}
       >
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-border">
