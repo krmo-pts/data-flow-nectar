@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { ChevronDown, ChevronUp, Grid, Link, Unlink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Grid, Link, Unlink, ChevronsUp, ChevronsDown } from 'lucide-react';
 import PlatformIcon from './PlatformIcon';
 
 interface NodeHeaderProps {
@@ -10,6 +10,8 @@ interface NodeHeaderProps {
     name: string;
     platform: string;
     type: string;
+    expandedUpstream?: boolean;
+    expandedDownstream?: boolean;
   };
   expanded: boolean;
   toggleExpand: (e: React.MouseEvent) => void;
@@ -17,6 +19,8 @@ interface NodeHeaderProps {
   hideOutgoingLineage: boolean;
   toggleIncomingLineage: (e: React.MouseEvent) => void;
   toggleOutgoingLineage: (e: React.MouseEvent) => void;
+  expandUpstreamLineage: (e: React.MouseEvent) => void;
+  expandDownstreamLineage: (e: React.MouseEvent) => void;
 }
 
 const NodeHeader: React.FC<NodeHeaderProps> = ({
@@ -26,7 +30,9 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
   hideIncomingLineage,
   hideOutgoingLineage,
   toggleIncomingLineage,
-  toggleOutgoingLineage
+  toggleOutgoingLineage,
+  expandUpstreamLineage,
+  expandDownstreamLineage
 }) => {
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between relative">
@@ -56,24 +62,24 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         </button>
       </div>
       
-      {/* Connection button for left side - positioned completely outside */}
-      <div 
-        className="absolute"
-        style={{
-          left: '-20px',  // Move further outside
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 20
-        }}
-      >
+      {/* Connection buttons for left side - incoming */}
+      <div className="connection-button-container left">
         <button 
-          className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+          className={`connection-button ${hideIncomingLineage ? '' : 'active'}`}
           onClick={toggleIncomingLineage}
           title={hideIncomingLineage ? "Show incoming lineage" : "Hide incoming lineage"}
-          style={{ position: 'relative', zIndex: 30 }}
         >
-          {hideIncomingLineage ? <Link size={10} /> : <Unlink size={10} />}
+          {hideIncomingLineage ? <Link size={14} /> : <Unlink size={14} />}
         </button>
+        
+        <button 
+          className={`connection-button expand-button ${data.expandedUpstream ? 'active' : ''}`}
+          onClick={expandUpstreamLineage}
+          title={data.expandedUpstream ? "Collapse upstream lineage" : "Expand upstream lineage"}
+        >
+          <ChevronsUp size={14} />
+        </button>
+        
         <Handle 
           type="target" 
           position={Position.Left} 
@@ -88,24 +94,24 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         />
       </div>
       
-      {/* Connection button for right side - positioned completely outside */}
-      <div 
-        className="absolute"
-        style={{
-          right: '-20px', // Move further outside
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 20
-        }}
-      >
+      {/* Connection buttons for right side - outgoing */}
+      <div className="connection-button-container right">
         <button 
-          className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+          className={`connection-button ${hideOutgoingLineage ? '' : 'active'}`}
           onClick={toggleOutgoingLineage}
           title={hideOutgoingLineage ? "Show outgoing lineage" : "Hide outgoing lineage"}
-          style={{ position: 'relative', zIndex: 30 }}
         >
-          {hideOutgoingLineage ? <Link size={10} /> : <Unlink size={10} />}
+          {hideOutgoingLineage ? <Link size={14} /> : <Unlink size={14} />}
         </button>
+        
+        <button 
+          className={`connection-button expand-button ${data.expandedDownstream ? 'active' : ''}`}
+          onClick={expandDownstreamLineage}
+          title={data.expandedDownstream ? "Collapse downstream lineage" : "Expand downstream lineage"}
+        >
+          <ChevronsDown size={14} />
+        </button>
+        
         <Handle 
           type="source" 
           position={Position.Right} 

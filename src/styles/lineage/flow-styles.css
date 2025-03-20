@@ -120,3 +120,62 @@
 .react-flow.has-focus-node .react-flow__edge:not(.impact-path-edge) {
   opacity: 0.15;
 }
+
+/* Connection button container styling */
+.connection-button-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+}
+
+/* Left connection buttons */
+.connection-button-container.left {
+  left: -34px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Right connection buttons */
+.connection-button-container.right {
+  right: -34px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Connection button styling */
+.connection-button {
+  padding: 2px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--background);
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.connection-button:hover {
+  background-color: var(--primary/10);
+  transform: scale(1.05);
+}
+
+.connection-button:active {
+  transform: scale(0.95);
+}
+
+.connection-button.active {
+  background-color: var(--primary);
+  color: var(--background);
+}
+
+.connection-button.expand-button {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
