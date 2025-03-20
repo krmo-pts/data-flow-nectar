@@ -39,10 +39,23 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
           <div className="font-medium">
             {data.name}
           </div>
-          <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400 font-normal">
-            <span className="font-medium">{data.platform}</span>
-            <span>/</span>
-            <span>{data.type}</span>
+          <div className="flex flex-col text-xs">
+            {/* Platform as technology indicator */}
+            <div className="font-medium text-blue-600 dark:text-blue-400">
+              {data.platform}
+            </div>
+            
+            {/* Object path as a separate entity */}
+            {data.path && (
+              <div className="text-gray-500 dark:text-gray-400 truncate max-w-[150px]" title={data.path}>
+                {data.path}
+              </div>
+            )}
+            
+            {/* Type remains as before */}
+            <div className="text-gray-500 dark:text-gray-400">
+              {data.type}
+            </div>
           </div>
         </div>
       </div>
