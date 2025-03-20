@@ -36,11 +36,11 @@ export const useNodeExpansion = (nodeId?: string) => {
         // Get the current node from ReactFlow
         const node = reactFlowInstance.getNode(nodeId);
         if (node) {
-          // Calculate height difference and adjust only for the collapsed content
+          // Calculate height difference and adjust position
           const currentHeight = nodeRef.current.getBoundingClientRect().height;
           const heightDiff = previousHeightRef.current - currentHeight;
           
-          // Adjust node position to prevent jumping
+          // Move the node up by the height of the collapsed area
           reactFlowInstance.setNodes(nodes => 
             nodes.map(n => {
               if (n.id === nodeId) {
@@ -48,7 +48,7 @@ export const useNodeExpansion = (nodeId?: string) => {
                   ...n,
                   position: {
                     ...n.position,
-                    y: n.position.y - heightDiff
+                    y: n.position.y + heightDiff / 2 // Divide by 2 as the node collapses from center
                   }
                 };
               }
@@ -57,7 +57,7 @@ export const useNodeExpansion = (nodeId?: string) => {
           );
         }
       } else if (expanded && previousHeightRef.current && nodeRef.current) {
-        // Handle expanding as well to ensure smooth transition both ways
+        // Handle expanding - move the node down by half the height difference
         const node = reactFlowInstance.getNode(nodeId);
         if (node) {
           const currentHeight = nodeRef.current.getBoundingClientRect().height;
@@ -70,7 +70,7 @@ export const useNodeExpansion = (nodeId?: string) => {
                   ...n,
                   position: {
                     ...n.position,
-                    y: n.position.y + heightDiff
+                    y: n.position.y - heightDiff / 2 // Divide by 2 as the node expands from center
                   }
                 };
               }
@@ -79,7 +79,7 @@ export const useNodeExpansion = (nodeId?: string) => {
           );
         }
       }
-    }, 50); // Increased timeout to ensure DOM has updated
+    }, 20); // Short timeout to ensure DOM has updated
     
     return () => clearTimeout(timeoutId);
   }, [expanded, nodeId, reactFlowInstance]);
