@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { ChevronDown, ChevronUp, Grid, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, ChevronUp, Grid, Eye, EyeOff, Loader2 } from 'lucide-react';
 import PlatformIcon from './PlatformIcon';
 
 interface NodeHeaderProps {
@@ -17,6 +17,7 @@ interface NodeHeaderProps {
   hideOutgoingLineage: boolean;
   toggleIncomingLineage: (e: React.MouseEvent) => void;
   toggleOutgoingLineage: (e: React.MouseEvent) => void;
+  isProcessingLineage?: boolean;
 }
 
 const NodeHeader: React.FC<NodeHeaderProps> = ({
@@ -26,7 +27,8 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
   hideIncomingLineage,
   hideOutgoingLineage,
   toggleIncomingLineage,
-  toggleOutgoingLineage
+  toggleOutgoingLineage,
+  isProcessingLineage = false
 }) => {
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between relative">
@@ -67,12 +69,19 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         }}
       >
         <button 
-          className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+          className={`p-1.5 rounded-full bg-background border-2 ${
+            isProcessingLineage ? 'border-gray-400' : 'border-primary'
+          } hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40`}
           onClick={toggleIncomingLineage}
           title={hideIncomingLineage ? "Show incoming lineage" : "Hide incoming lineage"}
           style={{ position: 'relative', zIndex: 30 }}
+          disabled={isProcessingLineage}
         >
-          {hideIncomingLineage ? <Eye size={10} /> : <EyeOff size={10} />}
+          {isProcessingLineage ? (
+            <Loader2 size={10} className="animate-spin" />
+          ) : (
+            hideIncomingLineage ? <Eye size={10} /> : <EyeOff size={10} />
+          )}
         </button>
         <Handle 
           type="target" 
@@ -99,12 +108,19 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         }}
       >
         <button 
-          className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+          className={`p-1.5 rounded-full bg-background border-2 ${
+            isProcessingLineage ? 'border-gray-400' : 'border-primary'
+          } hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40`}
           onClick={toggleOutgoingLineage}
           title={hideOutgoingLineage ? "Show outgoing lineage" : "Hide outgoing lineage"}
           style={{ position: 'relative', zIndex: 30 }}
+          disabled={isProcessingLineage}
         >
-          {hideOutgoingLineage ? <Eye size={10} /> : <EyeOff size={10} />}
+          {isProcessingLineage ? (
+            <Loader2 size={10} className="animate-spin" />
+          ) : (
+            hideOutgoingLineage ? <Eye size={10} /> : <EyeOff size={10} />
+          )}
         </button>
         <Handle 
           type="source" 
