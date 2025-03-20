@@ -13,7 +13,7 @@ const LineageContainer: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative overflow-hidden">
       <div className="absolute top-4 right-4 z-10">
         <Button onClick={resetLayout} variant="outline" size="sm" className="flex items-center gap-1">
           <RefreshCw className="h-4 w-4" />
