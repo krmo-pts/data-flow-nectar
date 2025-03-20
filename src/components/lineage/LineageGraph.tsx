@@ -52,11 +52,12 @@ const LineageGraph: React.FC = () => {
     onNodesChange
   });
 
-  // Use the edge handler hook
+  // Use the edge handler hook with setNodes passed to enable connected node removal
   const { handleEdgesChange, handleConnect } = useEdgeHandler({
     setEdges,
     onEdgesChange,
-    isDragging
+    isDragging,
+    setNodes // Pass setNodes to enable removing connected nodes when edges are deleted
   });
 
   const { 
