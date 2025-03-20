@@ -16,17 +16,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10 h-14">
+        <div className="container h-full mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center">
             <h1 className="text-2xl font-semibold">Data Lineage Explorer</h1>
           </div>
         </div>
       </header>
       
-      <main className="flex-1">
+      <main className="flex-1 h-[calc(100vh-3.5rem)]">
         {isLoading ? (
-          <div className="w-full h-[calc(100vh-4rem)] flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center">
             <div className="flex flex-col items-center space-y-4">
               <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
               <p className="text-sm text-muted-foreground">Loading lineage data...</p>
