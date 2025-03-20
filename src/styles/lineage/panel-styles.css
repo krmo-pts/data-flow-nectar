@@ -2,6 +2,7 @@
 /* Panel backgrounds - made solid */
 :root {
   --panel-bg: 0 0% 100%;
+  --panel-animation-duration: 0.2s;
 }
 
 .dark {
@@ -11,9 +12,10 @@
 /* Glass panel effect for UI components - changed to solid */
 .glass-panel {
   @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-md;
+  will-change: transform, opacity;
 }
 
-/* Detail panels styling - made solid */
+/* Detail panels styling - optimized for performance */
 .node-details-panel, 
 .edge-details-panel {
   position: absolute;
@@ -25,7 +27,9 @@
   padding: 16px;
   z-index: 10;
   @apply bg-white dark:bg-slate-900 shadow-md;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform var(--panel-animation-duration) ease, 
+              opacity var(--panel-animation-duration) ease;
+  will-change: transform, opacity;
 }
 
 .node-details-panel.closed,
@@ -39,4 +43,11 @@
 .edge-details-panel.open {
   transform: translateX(0);
   opacity: 1;
+}
+
+/* Use hardware acceleration for panel animations */
+.node-details-panel,
+.edge-details-panel {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { NodeData, Column } from '@/types/lineage';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   onClose,
   isOpen 
 }) => {
-  if (!node) return null;
+  if (!isOpen || !node) return null;
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -146,4 +146,4 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   );
 };
 
-export default NodeDetailsPanel;
+export default memo(NodeDetailsPanel);

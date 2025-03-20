@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { EdgeData } from '@/types/lineage';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ const EdgeDetailsPanel: React.FC<EdgeDetailsPanelProps> = ({
   onClose,
   isOpen 
 }) => {
-  if (!edge) return null;
+  if (!isOpen || !edge) return null;
 
   const getTransformationTypeColor = (type?: string) => {
     if (!type) return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -38,7 +38,7 @@ const EdgeDetailsPanel: React.FC<EdgeDetailsPanelProps> = ({
   };
 
   return (
-    <div className={`node-details-panel ${isOpen ? 'open' : 'closed'} glass-panel`}>
+    <div className={`edge-details-panel ${isOpen ? 'open' : 'closed'} glass-panel`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-foreground">Edge Details</h2>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
@@ -84,4 +84,4 @@ const EdgeDetailsPanel: React.FC<EdgeDetailsPanelProps> = ({
   );
 };
 
-export default EdgeDetailsPanel;
+export default memo(EdgeDetailsPanel);

@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState, useTransition } from 'react';
+import React, { useCallback, useState, useTransition, lazy, Suspense } from 'react';
 import {
   useNodesState,
   useEdgesState,
@@ -178,6 +178,7 @@ const LineageGraph: React.FC = () => {
         />
       </ReactFlowProvider>
       
+      {/* Only render panels when they're needed */}
       <NodeDetailsPanel 
         node={selectedNode} 
         onClose={handleCloseNodePanel} 
