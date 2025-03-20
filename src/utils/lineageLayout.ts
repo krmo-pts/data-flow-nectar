@@ -69,7 +69,7 @@ export const calculateInitialLayout = (
     nodesByLevel.get(level).push(nodeId);
   });
   
-  // Sort nodes within each level to minimize edge crossings
+  // Sort levels for consistent layout
   const sortedLevels = Array.from(nodesByLevel.keys()).sort((a, b) => a - b);
   
   // First pass: Order nodes within each level to minimize crossings
@@ -97,49 +97,77 @@ export const calculateInitialLayout = (
     });
   });
   
-  // Position nodes based on their level and order
-  const levelWidth = 250; // Horizontal spacing between levels
-  const nodeHeight = 120; // Estimated node height - Define nodeHeight here at this scope
+  // Position nodes based on their level and order with improved spacing
+  const levelWidth = 350; // Increased horizontal spacing between levels
+  const nodeHeight = 180; // Increased estimated node height for better spacing
+  const nodeSpacing = 60; // Vertical spacing between nodes
   const nodePositions: Record<string, { x: number; y: number }> = {};
   
   sortedLevels.forEach((level) => {
     const nodesInLevel = nodesByLevel.get(level) || [];
-    const totalHeight = nodesInLevel.length * nodeHeight;
+    // Calculate total required height including spacing
+    const totalHeight = nodesInLevel.length * nodeHeight + (nodesInLevel.length - 1) * nodeSpacing;
     const startY = -totalHeight / 2; // Center vertically
     
     nodesInLevel.forEach((nodeId, index) => {
-      // Use more precise vertical positioning to reduce overlaps
+      // Position with extra spacing between nodes
       nodePositions[nodeId] = {
         x: level * levelWidth,
-        y: startY + index * nodeHeight,
+        // Position nodes with explicit spacing between them
+        y: startY + index * (nodeHeight + nodeSpacing),
       };
     });
   });
   
-  // Second pass: Apply minimal adjustments to reduce remaining edge crossings
-  edges.forEach(edge => {
-    const sourcePos = nodePositions[edge.source];
-    const targetPos = nodePositions[edge.target];
+  // Apply force-based adjustments to reduce node overlaps
+  const applyForceDirectedAdjustments = () => {
+    const repulsionForce = 100; // Strength of repulsion between nodes
+    const iterations = 30; // Number of iterations for force calculation
     
-    if (sourcePos && targetPos) {
-      // If nodes are at adjacent levels but have a significant y-distance,
-      // slightly adjust their positions to reduce the crossing angle
-      const sourceLevel = nodeLevels.get(edge.source);
-      const targetLevel = nodeLevels.get(edge.target);
+    for (let i = 0; i < iterations; i++) {
+      // For each pair of nodes, calculate repulsion and adjust positions
+      const nodeIds = Array.from(nodePositions.keys());
       
-      if (targetLevel - sourceLevel === 1 && Math.abs(sourcePos.y - targetPos.y) > nodeHeight) {
-        // Small adjustment to make edges more horizontal when possible
-        const adjustment = 20;
-        if (sourcePos.y < targetPos.y) {
-          sourcePos.y += adjustment;
-          targetPos.y -= adjustment;
-        } else {
-          sourcePos.y -= adjustment;
-          targetPos.y += adjustment;
+      for (let j = 0; j < nodeIds.length; j++) {
+        for (let k = j + 1; k < nodeIds.length; k++) {
+          const id1 = nodeIds[j];
+          const id2 = nodeIds[k];
+          
+          const pos1 = nodePositions[id1];
+          const pos2 = nodePositions[id2];
+          
+          // Skip nodes that are far apart horizontally (different levels)
+          if (Math.abs(pos1.x - pos2.x) > levelWidth) continue;
+          
+          // Calculate distance and direction
+          const dx = pos2.x - pos1.x;
+          const dy = pos2.y - pos1.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // If nodes are too close, apply repulsion
+          if (distance < nodeHeight) {
+            // Only apply strong vertical repulsion when nodes are at the same level
+            const repulsion = repulsionForce / Math.max(distance, 10);
+            const dirX = dx / distance;
+            const dirY = dy / distance;
+            
+            // Mostly adjust vertical position
+            const adjustX = Math.abs(dx) < 10 ? dirX * repulsion * 0.1 : 0;
+            const adjustY = dirY * repulsion;
+            
+            // Apply adjustments (with more weight to vertical adjustment)
+            pos1.x -= adjustX;
+            pos1.y -= adjustY;
+            pos2.x += adjustX;
+            pos2.y += adjustY;
+          }
         }
       }
     }
-  });
+  };
+  
+  // Apply force-directed adjustments to reduce overlaps
+  applyForceDirectedAdjustments();
   
   // Create React Flow nodes with positioned data
   const flowNodes = nodes.map((node) => {
@@ -154,7 +182,7 @@ export const calculateInitialLayout = (
     };
   });
   
-  // Create edges with marker end and data
+  // Create edges with specific connection points and styling
   const flowEdges = edges.map((edge) => {
     return {
       id: edge.id,
@@ -163,6 +191,9 @@ export const calculateInitialLayout = (
       data: edge,
       type: 'default',
       animated: false,
+      // Connect to the header section of nodes
+      sourceHandle: 'header',
+      targetHandle: 'header',
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 15,

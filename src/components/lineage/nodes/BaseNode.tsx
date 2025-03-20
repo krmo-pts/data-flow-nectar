@@ -9,7 +9,6 @@ import {
   BarChart3,
   Server,
   Cloud,
-  ArrowRight,
   Grid,
   Eye,
   EyeOff,
@@ -18,7 +17,7 @@ import {
 } from 'lucide-react';
 
 const getPlatformIcon = (platform: string) => {
-  switch (platform) {
+  switch (platform?.toLowerCase()) {
     case 'postgres':
     case 'oracle':
     case 'mysql':
@@ -67,10 +66,16 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
   
   return (
     <>
-      {/* We removed the outer div and applied styling directly to React Flow's default node container */}
-      
-      {/* Header section */}
-      <div className="border-b border-gray-200 px-4 py-2 bg-gray-50 flex items-center justify-between rounded-t-lg">
+      {/* Header section with handles */}
+      <div className="relative border-b border-gray-200 px-4 py-2 bg-gray-50 flex items-center justify-between rounded-t-lg">
+        {/* Left handle for incoming connections */}
+        <Handle 
+          id="header"
+          type="target" 
+          position={Position.Left} 
+          className="w-3 h-3 rounded-full border-2 bg-background border-primary -ml-1.5" 
+        />
+        
         <div className="flex items-center space-x-2 text-sm text-gray-700">
           {getPlatformIcon(data.platform)}
           <div className="flex flex-col">
@@ -93,6 +98,14 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
             <Grid size={16} />
           </button>
         </div>
+        
+        {/* Right handle for outgoing connections */}
+        <Handle 
+          id="header"
+          type="source" 
+          position={Position.Right} 
+          className="w-3 h-3 rounded-full border-2 bg-background border-primary -mr-1.5" 
+        />
       </div>
       
       {/* Columns section */}
@@ -140,18 +153,6 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
           )}
         </div>
       )}
-      
-      {/* Handles for connections */}
-      <Handle 
-        type="target" 
-        position={Position.Left} 
-        className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
-      />
-      <Handle 
-        type="source" 
-        position={Position.Right} 
-        className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
-      />
     </>
   );
 };
