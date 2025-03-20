@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useRef, useEffect } from 'react';
 import { NodeProps } from 'reactflow';
 import { NodeData } from '../../../types/lineage';
 import { getNodeTypeClass } from './NodeUtils';
@@ -8,8 +8,14 @@ import NodeContent from './NodeContent';
 import { useNodeExpansion } from '@/hooks/useNodeExpansion';
 import { useLineageVisibility } from '@/hooks/useLineageVisibility';
 
-const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
-  const { expanded, showAllColumns, toggleExpand, toggleShowAll } = useNodeExpansion();
+const BaseNode = ({ data, selected, dragging, id }: NodeProps<NodeData>) => {
+  const { 
+    expanded, 
+    showAllColumns, 
+    toggleExpand, 
+    toggleShowAll,
+    setNodeElement
+  } = useNodeExpansion(id);
   
   const { 
     hideIncomingLineage, 
@@ -27,8 +33,19 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   // Add focus node class if this is the focus node
   const focusNodeClass = data.isFocus ? 'focus-node' : '';
   
+  // Create a ref for the node container
+  const nodeElementRef = useRef<HTMLDivElement>(null);
+  
+  // Pass the node element to the hook
+  useEffect(() => {
+    if (nodeElementRef.current) {
+      setNodeElement(nodeElementRef.current);
+    }
+  }, [setNodeElement]);
+  
   return (
     <div 
+      ref={nodeElementRef}
       className={`shadow-md rounded-lg overflow-visible border border-border ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''} ${focusNodeClass}`} 
       style={{ 
         minWidth: '240px', 
