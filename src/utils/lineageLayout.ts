@@ -72,73 +72,26 @@ export const calculateInitialLayout = (
   // Sort nodes within each level to minimize edge crossings
   const sortedLevels = Array.from(nodesByLevel.keys()).sort((a, b) => a - b);
   
-  // First pass: Order nodes within each level to minimize crossings
-  sortedLevels.forEach((level, levelIndex) => {
-    if (levelIndex === 0) return; // No need to sort the first level
-    
-    const nodesInLevel = nodesByLevel.get(level);
-    const prevLevelNodes = nodesByLevel.get(sortedLevels[levelIndex - 1]);
-    
-    // Order nodes based on the average position of their parent nodes
-    nodesInLevel.sort((nodeIdA, nodeIdB) => {
-      const parentsA = incomingEdges.get(nodeIdA) || [];
-      const parentsB = incomingEdges.get(nodeIdB) || [];
-      
-      // Calculate the average index of parent nodes for each node
-      const avgParentIndexA = parentsA.length ? 
-        parentsA.reduce((sum, parentId) => sum + prevLevelNodes.indexOf(parentId), 0) / parentsA.length : 
-        Number.MAX_SAFE_INTEGER;
-      
-      const avgParentIndexB = parentsB.length ? 
-        parentsB.reduce((sum, parentId) => sum + prevLevelNodes.indexOf(parentId), 0) / parentsB.length : 
-        Number.MAX_SAFE_INTEGER;
-      
-      return avgParentIndexA - avgParentIndexB;
-    });
-  });
+  // Improved layout configuration
+  const levelWidth = 350; // Increased horizontal spacing between levels
+  const nodeHeight = 150; // Increased estimated node height
+  const nodeWidth = 250; // Estimated node width
+  const nodePaddingY = 80; // Vertical padding between nodes
   
   // Position nodes based on their level and order
-  const levelWidth = 250; // Horizontal spacing between levels
-  const nodeHeight = 120; // Estimated node height - Define nodeHeight here at this scope
   const nodePositions: Record<string, { x: number; y: number }> = {};
   
   sortedLevels.forEach((level) => {
     const nodesInLevel = nodesByLevel.get(level) || [];
-    const totalHeight = nodesInLevel.length * nodeHeight;
-    const startY = -totalHeight / 2; // Center vertically
+    const levelHeight = nodesInLevel.length * (nodeHeight + nodePaddingY) - nodePaddingY;
+    const startY = -levelHeight / 2; // Center vertically
     
     nodesInLevel.forEach((nodeId, index) => {
-      // Use more precise vertical positioning to reduce overlaps
       nodePositions[nodeId] = {
         x: level * levelWidth,
-        y: startY + index * nodeHeight,
+        y: startY + index * (nodeHeight + nodePaddingY),
       };
     });
-  });
-  
-  // Second pass: Apply minimal adjustments to reduce remaining edge crossings
-  edges.forEach(edge => {
-    const sourcePos = nodePositions[edge.source];
-    const targetPos = nodePositions[edge.target];
-    
-    if (sourcePos && targetPos) {
-      // If nodes are at adjacent levels but have a significant y-distance,
-      // slightly adjust their positions to reduce the crossing angle
-      const sourceLevel = nodeLevels.get(edge.source);
-      const targetLevel = nodeLevels.get(edge.target);
-      
-      if (targetLevel - sourceLevel === 1 && Math.abs(sourcePos.y - targetPos.y) > nodeHeight) {
-        // Small adjustment to make edges more horizontal when possible
-        const adjustment = 20;
-        if (sourcePos.y < targetPos.y) {
-          sourcePos.y += adjustment;
-          targetPos.y -= adjustment;
-        } else {
-          sourcePos.y -= adjustment;
-          targetPos.y += adjustment;
-        }
-      }
-    }
   });
   
   // Create React Flow nodes with positioned data

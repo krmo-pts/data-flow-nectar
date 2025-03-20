@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
@@ -66,9 +67,10 @@ const LineageGraph: React.FC = () => {
     setNodes(flowNodes);
     setEdges(flowEdges);
     
+    // Give more time for the layout to stabilize before fitting view
     setTimeout(() => {
-      reactFlowInstance.fitView({ padding: 0.2 });
-    }, 50);
+      reactFlowInstance.fitView({ padding: 0.3, includeHiddenNodes: false });
+    }, 200);
   }, [reactFlowInstance, setEdges, setNodes]);
 
   useEffect(() => {
@@ -117,6 +119,9 @@ const LineageGraph: React.FC = () => {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+        minZoom={0.2}
+        maxZoom={2}
         snapToGrid={true}
         attributionPosition="bottom-right"
         className="lineage-flow"
