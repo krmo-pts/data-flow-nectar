@@ -36,11 +36,33 @@ export const useNodeExpansion = (nodeId?: string) => {
         // Get the current node from ReactFlow
         const node = reactFlowInstance.getNode(nodeId);
         if (node) {
-          // Calculate height difference
+          // Calculate height difference and adjust only for the collapsed content
           const currentHeight = nodeRef.current.getBoundingClientRect().height;
-          const heightDiff = (previousHeightRef.current - currentHeight) / 2;
+          const heightDiff = previousHeightRef.current - currentHeight;
           
           // Adjust node position to prevent jumping
+          reactFlowInstance.setNodes(nodes => 
+            nodes.map(n => {
+              if (n.id === nodeId) {
+                return {
+                  ...n,
+                  position: {
+                    ...n.position,
+                    y: n.position.y - heightDiff
+                  }
+                };
+              }
+              return n;
+            })
+          );
+        }
+      } else if (expanded && previousHeightRef.current && nodeRef.current) {
+        // Handle expanding as well to ensure smooth transition both ways
+        const node = reactFlowInstance.getNode(nodeId);
+        if (node) {
+          const currentHeight = nodeRef.current.getBoundingClientRect().height;
+          const heightDiff = currentHeight - previousHeightRef.current;
+          
           reactFlowInstance.setNodes(nodes => 
             nodes.map(n => {
               if (n.id === nodeId) {
@@ -57,7 +79,7 @@ export const useNodeExpansion = (nodeId?: string) => {
           );
         }
       }
-    }, 10);
+    }, 50); // Increased timeout to ensure DOM has updated
     
     return () => clearTimeout(timeoutId);
   }, [expanded, nodeId, reactFlowInstance]);
