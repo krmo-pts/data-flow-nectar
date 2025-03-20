@@ -17,15 +17,19 @@ export const useEdgeOptimizer = (edges: Edge[], nodes: Node[], isDragging = fals
   
   // Optimize edges rendering based on zoom level and dragging state
   const visibleEdges = useMemo(() => {
+    console.log('Recalculating visible edges', { 
+      dragging: isDragging, 
+      edgeCount: edges.length, 
+      zoom 
+    });
+    
     // During dragging, drastically reduce the number of visible edges
     if (isDragging && edges.length > 50) {
-      console.log('Optimizing for dragging, returning limited edges');
       return edges.slice(0, 50); // Only show first 50 edges during dragging
     }
     
     // When zoomed out with many edges, hide edges between distant nodes
     if (zoom < 0.5 && edges.length > 100) {
-      console.log('Optimizing for zoom out, filtering by distance');
       return edges.filter(edge => {
         const source = nodes.find(n => n.id === edge.source);
         const target = nodes.find(n => n.id === edge.target);

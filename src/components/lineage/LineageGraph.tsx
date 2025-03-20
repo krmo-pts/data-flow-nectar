@@ -1,32 +1,27 @@
 
-import React, { useCallback, useState, useTransition, useMemo } from 'react';
+import React, { useCallback, useState, useTransition } from 'react';
 import {
   useNodesState,
   useEdgesState,
-  addEdge,
-  Connection,
-  MarkerType,
   ReactFlowProvider,
-  NodeChange,
-  EdgeChange,
-  NodePositionChange
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { useLineageSearch } from '@/hooks/useLineageSearch';
-import { useDetailsPanels } from '@/hooks/useDetailsPanels';
 import { useLineageData } from '@/hooks/useLineageData';
+import { useDetailsPanels } from '@/hooks/useDetailsPanels';
+import { useDragHandler } from '@/hooks/useDragHandler';
+import { useEdgeHandler } from '@/hooks/useEdgeHandler';
 
 import NodeDetailsPanel from './NodeDetailsPanel';
 import EdgeDetailsPanel from './EdgeDetailsPanel';
 import DatasetToggle from './DatasetToggle';
 import LoadingOverlay from './LoadingOverlay';
 import FlowComponent from './FlowComponent';
+import DraggingIndicator from './DraggingIndicator';
 
 const LineageGraph: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPending, startTransition] = useTransition();
-  const [isDragging, setIsDragging] = useState(false);
   
   const {
     nodes,
@@ -51,75 +46,19 @@ const LineageGraph: React.FC = () => {
     setEdgesState(edges);
   }, [edges, setEdgesState]);
 
-  // Handle node changes with improved drag detection
-  const handleNodesChange = useCallback((changes: NodeChange[]) => {
-    // Apply changes to the local state immediately for smooth UI update
-    onNodesChange(changes);
-    
-    // Find position changes to detect dragging
-    const positionChange = changes.find(
-      (change): change is NodePositionChange => change.type === 'position'
-    );
-    
-    // If we have a position change, check its dragging status
-    if (positionChange) {
-      const wasDragging = isDragging;
-      const isDraggingNow = !!positionChange.dragging;
-      
-      if (wasDragging !== isDraggingNow) {
-        console.log('Node drag state changed:', {
-          nodeId: positionChange.id,
-          isDragging: isDraggingNow,
-          wasDragging: wasDragging
-        });
-        setIsDragging(isDraggingNow);
-      }
-      
-      // Only update the main state after drag completes to avoid excessive updates
-      if (!positionChange.dragging && positionChange.position) {
-        console.log('Finalizing node position after drag:', {
-          nodeId: positionChange.id,
-          position: positionChange.position
-        });
-        
-        startTransition(() => {
-          // Update node positions in the main state
-          setNodes(prevNodes => 
-            prevNodes.map(node => 
-              node.id === positionChange.id 
-                ? { ...node, position: positionChange.position || node.position }
-                : node
-            )
-          );
-        });
-      }
-    }
-  }, [onNodesChange, setNodes, isDragging]);
+  // Use the drag handler hook
+  const { isDragging, handleNodesChange } = useDragHandler({
+    setNodes,
+    onNodesChange
+  });
 
-  // Handle edge changes - skip during dragging for better performance
-  const handleEdgesChange = useCallback((changes: EdgeChange[]) => {
-    // Apply changes to the local state immediately
-    onEdgesChange(changes);
-    
-    // Only update the main state if not dragging
-    if (!isDragging) {
-      startTransition(() => {
-        setEdges(prev => {
-          // Only handle removal changes to avoid unnecessary updates
-          if (changes.some(change => change.type === 'remove')) {
-            return prev.filter(edge => 
-              !changes.some(change => 
-                change.type === 'remove' && change.id === edge.id
-              )
-            );
-          }
-          return prev;
-        });
-      });
-    }
-  }, [onEdgesChange, setEdges, isDragging]);
+  // Use the edge handler hook
+  const { handleEdgesChange, handleConnect } = useEdgeHandler({
+    setEdges,
+    onEdgesChange,
+    isDragging
+  });
 
-  const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
   const { 
     selectedNode,
     selectedEdge,
@@ -132,28 +71,70 @@ const LineageGraph: React.FC = () => {
     resetPanels
   } = useDetailsPanels();
   
-  const onConnect = useCallback(
-    (params: Connection) => {
-      setEdges((eds) => 
-        addEdge({
-          ...params,
-          data: { label: 'New Connection' },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 15,
-            height: 15,
-            color: '#64748b',
-          },
-          type: 'default',
-        }, eds)
-      );
-    },
-    [setEdges]
-  );
-
   const handleSearchQuery = useCallback(() => {
-    handleSearch(searchQuery);
-  }, [searchQuery, handleSearch]);
+    setNodes(prevNodes => {
+      // Use the search logic
+      const query = searchQuery.toLowerCase();
+      if (!query) {
+        return prevNodes.map((node) => ({
+          ...node,
+          className: `node-${node.data.type}`,
+        }));
+      }
+      
+      return prevNodes.map((node) => {
+        const data = node.data;
+        const matches = 
+          data.name.toLowerCase().includes(query) ||
+          data.path.toLowerCase().includes(query) ||
+          data.platform.toLowerCase().includes(query) ||
+          data.type.toLowerCase().includes(query) ||
+          data.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+          false;
+        
+        return {
+          ...node,
+          className: matches 
+            ? `node-${data.type} border-primary shadow-md ring-2 ring-primary/20` 
+            : `node-${data.type} opacity-40`,
+        };
+      });
+    });
+    
+    setEdges(prevEdges => {
+      const query = searchQuery.toLowerCase();
+      if (!query) return prevEdges;
+      
+      return prevEdges.map((edge) => {
+        const sourceNode = nodes.find(node => node.id === edge.source);
+        const targetNode = nodes.find(node => node.id === edge.target);
+        
+        const sourceData = sourceNode?.data;
+        const targetData = targetNode?.data;
+        
+        const sourceMatches = 
+          sourceData?.name.toLowerCase().includes(query) ||
+          sourceData?.path.toLowerCase().includes(query) ||
+          sourceData?.platform.toLowerCase().includes(query) ||
+          sourceData?.type.toLowerCase().includes(query) ||
+          sourceData?.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+          false;
+          
+        const targetMatches = 
+          targetData?.name.toLowerCase().includes(query) ||
+          targetData?.path.toLowerCase().includes(query) ||
+          targetData?.platform.toLowerCase().includes(query) ||
+          targetData?.type.toLowerCase().includes(query) ||
+          targetData?.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+          false;
+        
+        return {
+          ...edge,
+          className: sourceMatches || targetMatches ? '' : 'opacity-20',
+        };
+      });
+    });
+  }, [searchQuery, nodes, setNodes, setEdges]);
 
   const handleResetView = useCallback(() => {
     resetView();
@@ -161,22 +142,15 @@ const LineageGraph: React.FC = () => {
     resetPanels();
   }, [resetView, resetPanels]);
 
-  // Add loading overlay during dragging with large datasets
-  const showDraggingOverlay = useMemo(() => {
-    return isDragging && (datasetSize === 'large' || datasetSize === 'veryLarge') && edges.length > 300;
-  }, [isDragging, datasetSize, edges.length]);
+  // Determine if we should show the dragging overlay
+  const showDraggingOverlay = isDragging && 
+    (datasetSize === 'large' || datasetSize === 'veryLarge') && 
+    edges.length > 300;
 
   return (
     <div className="w-full h-full relative">
       <LoadingOverlay isVisible={isLoading} datasetSize={datasetSize} />
-      
-      {showDraggingOverlay && (
-        <div className="absolute top-16 right-4 z-50 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-sm border border-border">
-          <div className="text-xs text-muted-foreground">
-            Optimizing rendering during drag operation...
-          </div>
-        </div>
-      )}
+      <DraggingIndicator showOverlay={showDraggingOverlay} />
       
       <DatasetToggle 
         datasetSize={datasetSize} 
@@ -190,7 +164,7 @@ const LineageGraph: React.FC = () => {
           edges={edgesState}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
+          onConnect={handleConnect}
           handleNodeClick={handleNodeClick}
           handleEdgeClick={handleEdgeClick}
           searchQuery={searchQuery}

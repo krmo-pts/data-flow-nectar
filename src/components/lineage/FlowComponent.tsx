@@ -1,4 +1,5 @@
-import React, { memo, useEffect, useMemo } from 'react';
+
+import React, { memo, useEffect } from 'react';
 import { ReactFlow, Connection } from 'reactflow';
 
 import { nodeTypes, edgeTypes } from './flow/FlowTypeDefinitions';
@@ -43,45 +44,18 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
 
   // Log drag state changes
   useEffect(() => {
-    console.log('FlowComponent drag state changed:', {
-      isDragging,
-      nodesCount: nodes.length,
-      edgesCount: edges.length,
-      visibleEdgesCount: visibleEdges.length,
-      zoom
-    });
-  }, [isDragging, nodes.length, edges.length, visibleEdges.length, zoom]);
-
-  // Determine which edges to show - using useMemo to prevent recalculations
-  const edgesToRender = useMemo(() => {
-    console.log('Recalculating edges to render', {
-      isDragging,
-      zoom,
-      edgesLength: edges.length
-    });
-    
-    if (isDragging && edges.length > 50) {
-      // During dragging, show minimal edges (max 50)
-      return visibleEdges.slice(0, 50);
-    } else if (zoom < 0.5 && edges.length > 100) {
-      // When zoomed out with many edges, filter
-      return visibleEdges;
-    } else {
-      // Otherwise show all edges
-      return edges;
+    if (isDragging) {
+      console.log('FlowComponent: Dragging with', {
+        visibleEdges: visibleEdges.length,
+        totalEdges: edges.length
+      });
     }
-  }, [edges, visibleEdges, isDragging, zoom]);
-      
-  console.log('Rendering edges:', {
-    totalEdges: edges.length,
-    renderedEdges: edgesToRender.length,
-    filtering: isDragging || (zoom < 0.5 && edges.length > 100)
-  });
+  }, [isDragging, visibleEdges.length, edges.length]);
 
   return (
     <ReactFlow
       nodes={nodes}
-      edges={edgesToRender}
+      edges={visibleEdges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
