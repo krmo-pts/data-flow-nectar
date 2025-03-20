@@ -1,0 +1,42 @@
+
+/* Panel backgrounds - made solid */
+:root {
+  --panel-bg: 0 0% 100%;
+}
+
+.dark {
+  --panel-bg: 240 10% 3.9%;
+}
+
+/* Glass panel effect for UI components - changed to solid */
+.glass-panel {
+  @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-md;
+}
+
+/* Detail panels styling - made solid */
+.node-details-panel, 
+.edge-details-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  padding: 16px;
+  z-index: 10;
+  @apply bg-white dark:bg-slate-900 shadow-md;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.node-details-panel.closed,
+.edge-details-panel.closed {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.node-details-panel.open,
+.edge-details-panel.open {
+  transform: translateX(0);
+  opacity: 1;
+}

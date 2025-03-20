@@ -1,0 +1,15 @@
+
+/* Improved performance for panning/zooming operations */
+.react-flow__pane {
+  cursor: grab;
+}
+
+.react-flow__pane.dragging {
+  cursor: grabbing;
+}
+
+/* Add performance optimizations for viewport rendering */
+.react-flow__viewport {
+  will-change: transform;
+  transform-style: flat;
+}

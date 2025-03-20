@@ -1,0 +1,31 @@
+
+/* Override edge styles for better visibility and performance */
+.lineage-flow .react-flow__edge {
+  cursor: pointer;
+  contain: layout style paint; /* Add contain for better performance */
+}
+
+.lineage-flow .react-flow__edge path {
+  stroke-width: 2;
+  @apply stroke-slate-400;
+  transition: none !important; /* Disable transitions for better performance */
+}
+
+.lineage-flow .react-flow__edge.selected path {
+  @apply stroke-primary;
+  stroke-width: 3;
+}
+
+.lineage-flow .react-flow__handle {
+  width: 8px;
+  height: 8px;
+}
+
+/* Performance optimizations for edges */
+.react-flow__edge {
+  will-change: stroke, stroke-width;
+}
+
+.react-flow__edge-path {
+  will-change: d;
+}
