@@ -1,6 +1,6 @@
 
 import React, { memo, useEffect } from 'react';
-import { ReactFlow, Connection } from 'reactflow';
+import { ReactFlow, Connection, Node, Edge } from 'reactflow';
 
 import { nodeTypes, edgeTypes } from './flow/FlowTypeDefinitions';
 import { useFlowOptions } from './flow/FlowOptions';
@@ -8,8 +8,8 @@ import { useEdgeOptimizer } from './flow/EdgeOptimizer';
 import FlowElements from './flow/FlowElements';
 
 interface FlowComponentProps {
-  nodes: any[];
-  edges: any[];
+  nodes: Node[];
+  edges: Edge[];
   onNodesChange: any;
   onEdgesChange: any;
   onConnect: (params: Connection) => void;
@@ -19,7 +19,10 @@ interface FlowComponentProps {
   setSearchQuery: (query: string) => void;
   handleSearch: () => void;
   resetView: () => void;
+  resetPanels: () => void;
   isDragging?: boolean;
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
 }
 
 const FlowComponent: React.FC<FlowComponentProps> = ({
@@ -34,7 +37,10 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
   setSearchQuery,
   handleSearch,
   resetView,
+  resetPanels,
   isDragging = false,
+  setNodes,
+  setEdges,
 }) => {
   // Get ReactFlow options
   const rfOptions = useFlowOptions();
@@ -71,10 +77,14 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       {...rfOptions}
     >
       <FlowElements
+        nodes={nodes}
+        setNodes={setNodes}
+        setEdges={setEdges}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleSearch={handleSearch}
         resetView={resetView}
+        resetPanels={resetPanels}
       />
     </ReactFlow>
   );

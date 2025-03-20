@@ -1,33 +1,39 @@
 
 import React from 'react';
 import { Panel } from 'reactflow';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import LineageSearch from './LineageSearch';
+import { Node, Edge } from 'reactflow';
 
 interface SearchPanelProps {
+  nodes: Node[];
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   handleSearch: () => void;
+  resetView: () => void;
+  resetPanels: () => void;
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({ 
+  nodes,
+  setNodes,
+  setEdges,
   searchQuery, 
   setSearchQuery, 
-  handleSearch 
+  handleSearch,
+  resetView,
+  resetPanels
 }) => {
   return (
-    <Panel position="top-left" className="glass-panel p-2 rounded-md flex items-center space-x-2">
-      <Input
-        type="text"
-        placeholder="Search nodes..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-64 h-8 text-sm"
+    <Panel position="top-left" className="glass-panel p-2 rounded-md">
+      <LineageSearch 
+        nodes={nodes}
+        setNodes={setNodes}
+        setEdges={setEdges}
+        resetView={resetView}
+        resetPanels={resetPanels}
       />
-      <Button size="sm" onClick={handleSearch} className="h-8 px-2">
-        <Search className="h-4 w-4" />
-      </Button>
     </Panel>
   );
 };
