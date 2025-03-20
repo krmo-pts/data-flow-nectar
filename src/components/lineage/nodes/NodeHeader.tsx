@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
 import { ChevronDown, ChevronUp, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -9,6 +10,7 @@ interface NodeHeaderProps {
     name: string;
     platform: string;
     type: string;
+    path?: string;
   };
   expanded: boolean;
   toggleExpand: (e: React.MouseEvent) => void;
@@ -37,8 +39,10 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
           <div className="font-medium">
             {data.name}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 font-normal">
-            {data.platform} / {data.type}
+          <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400 font-normal">
+            <span className="font-medium">{data.platform}</span>
+            <span>/</span>
+            <span>{data.type}</span>
           </div>
         </div>
       </div>
