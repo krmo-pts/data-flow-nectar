@@ -54,6 +54,12 @@
   will-change: transform;
 }
 
+/* Node container styling for stable positioning */
+.node-container {
+  transform-origin: top center;
+  transition: none; /* Disable transitions to prevent animation */
+}
+
 /* Explicitly ensure node content doesn't clip the buttons */
 .lineage-flow .react-flow__node-content {
   overflow: visible !important;

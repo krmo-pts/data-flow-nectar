@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useReactFlow } from 'reactflow';
 
@@ -36,11 +35,12 @@ export const useNodeExpansion = (nodeId?: string) => {
         // Get the current node from ReactFlow
         const node = reactFlowInstance.getNode(nodeId);
         if (node) {
-          // Calculate height difference and adjust position
+          // Calculate height difference
           const currentHeight = nodeRef.current.getBoundingClientRect().height;
           const heightDiff = previousHeightRef.current - currentHeight;
           
-          // Move the node up by the height of the collapsed area
+          // When collapsing, we want to keep the header in place (top of node)
+          // so we move the node up by the full height difference
           reactFlowInstance.setNodes(nodes => 
             nodes.map(n => {
               if (n.id === nodeId) {
@@ -48,7 +48,7 @@ export const useNodeExpansion = (nodeId?: string) => {
                   ...n,
                   position: {
                     ...n.position,
-                    y: n.position.y + heightDiff / 2 // Divide by 2 as the node collapses from center
+                    y: n.position.y
                   }
                 };
               }
@@ -57,11 +57,11 @@ export const useNodeExpansion = (nodeId?: string) => {
           );
         }
       } else if (expanded && previousHeightRef.current && nodeRef.current) {
-        // Handle expanding - move the node down by half the height difference
+        // When expanding, we also want to keep the header in place
+        // so we don't need to adjust the Y position
         const node = reactFlowInstance.getNode(nodeId);
         if (node) {
           const currentHeight = nodeRef.current.getBoundingClientRect().height;
-          const heightDiff = currentHeight - previousHeightRef.current;
           
           reactFlowInstance.setNodes(nodes => 
             nodes.map(n => {
@@ -70,7 +70,7 @@ export const useNodeExpansion = (nodeId?: string) => {
                   ...n,
                   position: {
                     ...n.position,
-                    y: n.position.y - heightDiff / 2 // Divide by 2 as the node expands from center
+                    y: n.position.y
                   }
                 };
               }
@@ -79,7 +79,7 @@ export const useNodeExpansion = (nodeId?: string) => {
           );
         }
       }
-    }, 20); // Short timeout to ensure DOM has updated
+    }, 0); // Use 0 to run as soon as the current call stack is empty
     
     return () => clearTimeout(timeoutId);
   }, [expanded, nodeId, reactFlowInstance]);
@@ -97,3 +97,4 @@ export const useNodeExpansion = (nodeId?: string) => {
     setNodeElement
   };
 };
+

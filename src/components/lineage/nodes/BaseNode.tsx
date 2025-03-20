@@ -46,10 +46,11 @@ const BaseNode = ({ data, selected, dragging, id }: NodeProps<NodeData>) => {
   return (
     <div 
       ref={nodeElementRef}
-      className={`shadow-md rounded-lg overflow-visible border border-border ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''} ${focusNodeClass}`} 
+      className={`shadow-md rounded-lg overflow-visible border border-border ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''} ${focusNodeClass} node-container`} 
       style={{ 
         minWidth: '240px', 
-        cursor: 'move'
+        cursor: 'move',
+        transformOrigin: 'top center' // This ensures expansions/collapses happen from the top
       }}
     >
       <NodeHeader 
