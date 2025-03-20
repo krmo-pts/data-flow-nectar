@@ -49,6 +49,8 @@
   height: auto !important;
   min-width: 240px;
   cursor: pointer;
+  /* Add overflow visible to ensure the buttons show completely */
+  overflow: visible;
 }
 
 .lineage-flow .react-flow__node.selected .shadow-md {
@@ -58,6 +60,7 @@
 /* Performance optimizations for large datasets */
 .react-flow__node {
   will-change: transform;
+  overflow: visible;
 }
 
 /* Optimize node appearance during dragging */

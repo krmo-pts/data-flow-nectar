@@ -56,9 +56,10 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         </button>
       </div>
       
-      {/* Handles for connections - Fixed positioning to ensure button is fully visible */}
+      {/* Handles for connections - Positioned to ensure buttons are fully visible */}
       <div
-        className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 left-0 z-10"
+        className="absolute top-1/2 transform -translate-y-1/2 left-0 z-10"
+        style={{ transform: 'translate(-50%, -50%)' }}
       >
         <button 
           className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -70,13 +71,14 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         <Handle 
           type="target" 
           position={Position.Left} 
-          className="w-2 h-2 min-w-2 min-h-2 rounded-full absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0" 
+          className="w-2 h-2 min-w-2 min-h-2 rounded-full absolute left-0 top-1/2 -translate-y-1/2 opacity-0" 
           isConnectable={!hideIncomingLineage}
         />
       </div>
       
       <div
-        className="absolute top-1/2 transform -translate-y-1/2 translate-x-1/2 right-0 z-10"
+        className="absolute top-1/2 transform -translate-y-1/2 right-0 z-10"
+        style={{ transform: 'translate(50%, -50%)' }}
       >
         <button 
           className="p-1.5 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -88,7 +90,7 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
         <Handle 
           type="source" 
           position={Position.Right} 
-          className="w-2 h-2 min-w-2 min-h-2 rounded-full absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0" 
+          className="w-2 h-2 min-w-2 min-h-2 rounded-full absolute right-0 top-1/2 -translate-y-1/2 opacity-0" 
           isConnectable={!hideOutgoingLineage}
         />
       </div>
