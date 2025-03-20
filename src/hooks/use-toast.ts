@@ -14,6 +14,7 @@ export type ToastProps = {
   action?: ToastActionElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  variant?: "default" | "destructive" | string
 }
 
 type ToasterToast = ToastProps & {

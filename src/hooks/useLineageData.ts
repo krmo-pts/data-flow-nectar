@@ -88,7 +88,6 @@ export function useLineageData() {
         toast({
           title: 'Error loading data',
           description: 'There was a problem loading the lineage data. Please try again.',
-          variant: 'destructive',
         });
         setIsLoading(false);
       }
