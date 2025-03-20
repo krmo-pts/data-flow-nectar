@@ -1,6 +1,6 @@
 
 import React, { memo, useState, useEffect } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
+import { Handle, Position, NodeProps, useReactFlow } from 'reactflow';
 import { NodeData } from '../../../types/lineage';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -14,7 +14,9 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Link,
+  Unlink
 } from 'lucide-react';
 
 // Memoize icon components to prevent re-renders
@@ -69,6 +71,10 @@ const Column = memo(({ name, type }: { name: string, type: string }) => (
 const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   const [expanded, setExpanded] = useState(true);
   const [showAllColumns, setShowAllColumns] = useState(false);
+  const [hideIncomingLineage, setHideIncomingLineage] = useState(false);
+  const [hideOutgoingLineage, setHideOutgoingLineage] = useState(false);
+  
+  const { setEdges } = useReactFlow();
   
   // Log when dragging state changes
   useEffect(() => {
@@ -99,6 +105,48 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
     e.stopPropagation(); // Prevent node selection when toggling
     console.log(`Toggling showAll for node ${data.id}:`, !showAllColumns);
     setShowAllColumns(!showAllColumns);
+  };
+  
+  // Function to toggle incoming lineage connections
+  const toggleIncomingLineage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent node selection when toggling
+    const newState = !hideIncomingLineage;
+    setHideIncomingLineage(newState);
+    console.log(`Toggling incoming lineage for node ${data.id}:`, newState);
+    
+    // Update edges visibility based on toggle state
+    setEdges(edges => {
+      return edges.map(edge => {
+        if (edge.target === data.id) {
+          return {
+            ...edge,
+            hidden: newState
+          };
+        }
+        return edge;
+      });
+    });
+  };
+  
+  // Function to toggle outgoing lineage connections
+  const toggleOutgoingLineage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent node selection when toggling
+    const newState = !hideOutgoingLineage;
+    setHideOutgoingLineage(newState);
+    console.log(`Toggling outgoing lineage for node ${data.id}:`, newState);
+    
+    // Update edges visibility based on toggle state
+    setEdges(edges => {
+      return edges.map(edge => {
+        if (edge.source === data.id) {
+          return {
+            ...edge,
+            hidden: newState
+          };
+        }
+        return edge;
+      });
+    });
   };
   
   return (
@@ -138,16 +186,33 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
         </div>
         
         {/* Handles for connections positioned in the middle of the header */}
-        <Handle 
-          type="target" 
-          position={Position.Left} 
-          className="w-2 h-2 rounded-full border-2 bg-background border-primary absolute top-1/2 left-0 transform -translate-y-1/2" 
-        />
-        <Handle 
-          type="source" 
-          position={Position.Right} 
-          className="w-2 h-2 rounded-full border-2 bg-background border-primary absolute top-1/2 right-0 transform -translate-y-1/2" 
-        />
+        <button 
+          className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 p-1 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 z-10"
+          onClick={toggleIncomingLineage}
+          title={hideIncomingLineage ? "Show incoming lineage" : "Hide incoming lineage"}
+        >
+          {hideIncomingLineage ? <Link size={10} /> : <Unlink size={10} />}
+          <Handle 
+            type="target" 
+            position={Position.Left} 
+            className="w-full h-full rounded-full absolute top-0 left-0 opacity-0" 
+            isConnectable={!hideIncomingLineage}
+          />
+        </button>
+        
+        <button 
+          className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1 p-1 rounded-full bg-background border-2 border-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 z-10"
+          onClick={toggleOutgoingLineage}
+          title={hideOutgoingLineage ? "Show outgoing lineage" : "Hide outgoing lineage"}
+        >
+          {hideOutgoingLineage ? <Link size={10} /> : <Unlink size={10} />}
+          <Handle 
+            type="source" 
+            position={Position.Right} 
+            className="w-full h-full rounded-full absolute top-0 left-0 opacity-0" 
+            isConnectable={!hideOutgoingLineage}
+          />
+        </button>
       </div>
       
       {/* Columns section */}
