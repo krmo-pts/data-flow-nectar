@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeData } from '../../../types/lineage';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,12 @@ import {
   BarChart3,
   Server,
   Cloud,
-  ArrowRight
+  ArrowRight,
+  Grid,
+  Eye,
+  EyeOff,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const getPlatformIcon = (platform: string) => {
@@ -46,30 +51,95 @@ const getNodeTypeColor = (type: string) => {
 };
 
 const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
+  const [expanded, setExpanded] = useState(true);
+  const [showAllColumns, setShowAllColumns] = useState(false);
+  
   const nodeTypeColor = getNodeTypeColor(data.type);
+  const maxVisibleColumns = showAllColumns ? 100 : 5;
+
+  // Ensure we have columns data
+  const columns = data.columns || [];
+  const visibleColumns = expanded ? columns.slice(0, maxVisibleColumns) : [];
+  const hiddenColumnsCount = columns.length - visibleColumns.length;
+  
+  const toggleExpand = () => setExpanded(!expanded);
+  const toggleShowAll = () => setShowAllColumns(!showAllColumns);
   
   return (
-    <div className={`px-4 py-3 rounded-lg shadow-sm border ${selected ? 'border-primary shadow-md ring-2 ring-primary/20' : 'border-border'} bg-background transition-all duration-200 min-w-[180px]`}>
-      <div className="flex items-center mb-2">
-        <div className="flex items-center space-x-2">
+    <div className={`shadow-md rounded-lg overflow-hidden bg-white transition-all duration-200 ${selected ? 'ring-2 ring-primary/40' : ''}`} style={{ minWidth: '240px' }}>
+      {/* Header section */}
+      <div className="border-b border-gray-200 px-4 py-2 bg-gray-50 flex items-center justify-between">
+        <div className="flex items-center space-x-2 text-sm text-gray-700">
           {getPlatformIcon(data.platform)}
-          <span className="text-sm font-medium truncate max-w-[140px]" title={data.name}>
-            {data.name}
-          </span>
+          <div className="flex flex-col">
+            <div className="font-medium">
+              {data.name}
+            </div>
+            <div className="text-xs text-gray-500 font-normal">
+              {data.platform} / {data.type}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <button 
+            onClick={toggleExpand}
+            className="p-1 text-gray-500 hover:bg-gray-200 rounded-sm transition-colors"
+          >
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          <button className="p-1 text-gray-500 hover:bg-gray-200 rounded-sm transition-colors ml-1">
+            <Grid size={16} />
+          </button>
         </div>
       </div>
       
-      <div className="flex items-center justify-between">
-        <Badge variant="outline" className={`${nodeTypeColor} text-xs capitalize`}>
-          {data.type}
-        </Badge>
-        {data.columns && (
-          <span className="text-xs text-muted-foreground">
-            {data.columns.length} columns
-          </span>
-        )}
-      </div>
+      {/* Columns section */}
+      {expanded && (
+        <div className="bg-white">
+          {visibleColumns.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {visibleColumns.map((column, index) => (
+                <div key={index} className="flex items-center justify-between px-4 py-1.5 hover:bg-gray-50">
+                  <span className="text-sm text-gray-800 truncate">{column.name}</span>
+                  <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{column.type}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+              No columns available
+            </div>
+          )}
+          
+          {/* Footer controls */}
+          {columns.length > 5 && (
+            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600">
+              <button 
+                className="hover:underline flex items-center space-x-1"
+                onClick={toggleShowAll}
+              >
+                {showAllColumns ? (
+                  <>
+                    <EyeOff size={14} />
+                    <span>Hide unused columns</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye size={14} />
+                    <span>Show all {columns.length} columns</span>
+                  </>
+                )}
+              </button>
+              
+              <span className="text-xs text-gray-500">
+                {hiddenColumnsCount > 0 && `+${hiddenColumnsCount} more`}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
       
+      {/* Handles for connections */}
       <Handle 
         type="target" 
         position={Position.Left} 
@@ -80,11 +150,6 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
         position={Position.Right} 
         className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
       />
-      
-      {/* Directional indicator */}
-      <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-        <ArrowRight className="h-3 w-3" />
-      </div>
     </div>
   );
 };
