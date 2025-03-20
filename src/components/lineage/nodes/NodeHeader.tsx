@@ -31,6 +31,11 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
   toggleOutgoingLineage,
   isProcessingLineage = false
 }) => {
+  // Prepare the full path incorporating the node name if a path exists
+  const fullPath = data.path 
+    ? `${data.path}/${data.name}`
+    : data.name;
+    
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between relative">
       <div className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
@@ -45,17 +50,12 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
               {data.platform}
             </div>
             
-            {/* Object path as a separate entity */}
-            {data.path && (
-              <div className="text-gray-500 dark:text-gray-400 truncate max-w-[150px]" title={data.path}>
-                {data.path}
-              </div>
-            )}
-            
-            {/* Type remains as before */}
-            <div className="text-gray-500 dark:text-gray-400">
-              {data.type}
+            {/* Full path including node name */}
+            <div className="text-gray-500 dark:text-gray-400 truncate max-w-[150px]" title={fullPath}>
+              {fullPath}
             </div>
+            
+            {/* Type element removed as requested */}
           </div>
         </div>
       </div>
