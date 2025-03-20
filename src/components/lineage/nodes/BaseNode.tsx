@@ -1,5 +1,5 @@
 
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState } from 'react';
 import { NodeProps, useReactFlow } from 'reactflow';
 import { NodeData } from '../../../types/lineage';
 import { getNodeTypeClass } from './NodeUtils';
@@ -14,17 +14,6 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   
   const { setEdges } = useReactFlow();
   
-  // Log when dragging state changes
-  useEffect(() => {
-    console.log(`Node ${data.id} dragging state:`, {
-      id: data.id,
-      name: data.name,
-      dragging: dragging,
-      expanded: expanded,
-      columnCount: data.columns?.length || 0
-    });
-  }, [dragging, data.id, data.name, expanded, data.columns?.length]);
-  
   const nodeTypeClass = getNodeTypeClass(data.type);
   
   // Ensure we have columns data
@@ -32,13 +21,11 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
-    console.log(`Toggling expand for node ${data.id}:`, !expanded);
     setExpanded(!expanded);
   };
   
   const toggleShowAll = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
-    console.log(`Toggling showAll for node ${data.id}:`, !showAllColumns);
     setShowAllColumns(!showAllColumns);
   };
   
@@ -47,7 +34,6 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
     e.stopPropagation(); // Prevent node selection when toggling
     const newState = !hideIncomingLineage;
     setHideIncomingLineage(newState);
-    console.log(`Toggling incoming lineage for node ${data.id}:`, newState);
     
     // Update edges visibility based on toggle state
     setEdges(edges => {
@@ -68,7 +54,6 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
     e.stopPropagation(); // Prevent node selection when toggling
     const newState = !hideOutgoingLineage;
     setHideOutgoingLineage(newState);
-    console.log(`Toggling outgoing lineage for node ${data.id}:`, newState);
     
     // Update edges visibility based on toggle state
     setEdges(edges => {
@@ -86,7 +71,7 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   
   return (
     <div 
-      className={`shadow-md rounded-lg overflow-hidden ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''}`} 
+      className={`shadow-md rounded-lg overflow-visible ${nodeTypeClass} ${selected ? 'ring-2 ring-primary/40' : ''} ${dragging ? 'shadow-lg ring-1 ring-primary/40' : ''}`} 
       style={{ 
         minWidth: '240px', 
         cursor: 'move'

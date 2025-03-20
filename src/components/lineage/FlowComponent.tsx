@@ -46,17 +46,7 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
   const rfOptions = useFlowOptions();
   
   // Optimize edges rendering based on zoom level and dragging state
-  const { visibleEdges, zoom } = useEdgeOptimizer(edges, nodes, isDragging);
-
-  // Log drag state changes
-  useEffect(() => {
-    if (isDragging) {
-      console.log('FlowComponent: Dragging with', {
-        visibleEdges: visibleEdges.length,
-        totalEdges: edges.length
-      });
-    }
-  }, [isDragging, visibleEdges.length, edges.length]);
+  const { visibleEdges } = useEdgeOptimizer(edges, nodes, isDragging);
 
   return (
     <ReactFlow
@@ -75,8 +65,7 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
       attributionPosition="bottom-right"
       className={`lineage-flow ${isDragging ? 'is-dragging' : ''}`}
       style={{ height: '100%', width: '100%' }}
-      // Add additional props to ensure node connections are visible
-      nodeOrigin={[0.5, 0.5]} // Center node origin
+      nodeOrigin={[0.5, 0.5]}
       elementsSelectable={true}
       {...rfOptions}
     >

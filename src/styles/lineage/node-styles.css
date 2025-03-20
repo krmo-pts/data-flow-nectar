@@ -49,6 +49,7 @@
   height: auto !important;
   min-width: 240px;
   cursor: pointer;
+  overflow: visible !important;
 }
 
 /* Explicitly ensure node content doesn't clip the buttons */

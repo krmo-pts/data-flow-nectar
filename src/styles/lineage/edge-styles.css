@@ -25,6 +25,7 @@
   opacity: 0; /* Completely transparent */
   border: none; /* Remove border */
   background: transparent; /* Transparent background */
+  pointer-events: all;
 }
 
 /* Position handles to properly align with the connection buttons */
@@ -43,4 +44,15 @@
 
 .react-flow__edge-path {
   will-change: d;
+}
+
+/* Ensure node wrapper does not clip child elements */
+.react-flow__node-default,
+.react-flow__node {
+  overflow: visible !important;
+}
+
+.react-flow__node-default > div,
+.react-flow__node > div {
+  overflow: visible !important;
 }
