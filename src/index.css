@@ -105,6 +105,8 @@
   min-width: 240px;
   transition: all 0.2s ease-in-out;
   overflow: hidden;
+  /* Add margin to create space between nodes */
+  margin: 10px !important;
 }
 
 .react-flow__node.selected {
