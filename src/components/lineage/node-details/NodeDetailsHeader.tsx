@@ -48,35 +48,37 @@ const NodeDetailsHeader: React.FC<NodeDetailsHeaderProps> = ({
       
       <div className="space-y-4">
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-2xl font-bold text-foreground">{node.name}</h3>
-            {onSetFocus && (
-              <Button 
-                variant={isLocalFocus ? "default" : "outline"}
-                size="sm" 
-                onClick={handleSetFocus}
-                className="flex items-center gap-1"
-                disabled={isAnalyzing}
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    <span>Analyzing...</span>
-                  </>
-                ) : isLocalFocus ? (
-                  <>
-                    <Target size={14} />
-                    <span>Focused</span>
-                  </>
-                ) : (
-                  <>
-                    <Target size={14} />
-                    <span>Set as focus</span>
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          {/* Full width node name without the button competing for space */}
+          <h3 className="text-2xl font-bold text-foreground mb-2">{node.name}</h3>
+          
+          {/* Focus button moved below the name */}
+          {onSetFocus && (
+            <Button 
+              variant={isLocalFocus ? "default" : "outline"}
+              size="sm" 
+              onClick={handleSetFocus}
+              className="mb-3 flex items-center gap-1"
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Analyzing...</span>
+                </>
+              ) : isLocalFocus ? (
+                <>
+                  <Target size={14} />
+                  <span>Focused</span>
+                </>
+              ) : (
+                <>
+                  <Target size={14} />
+                  <span>Set as focus</span>
+                </>
+              )}
+            </Button>
+          )}
+          
           <div className="flex flex-wrap gap-2 mb-2">
             <Badge variant="outline" className={getTypeColor(node.type)}>
               {node.type}
