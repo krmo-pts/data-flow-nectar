@@ -1,207 +1,202 @@
 
+import { Edge, Node, Position } from 'reactflow';
 import { NodeData, EdgeData } from '@/types/lineage';
-import { Node, Edge, MarkerType } from 'reactflow';
 
+/**
+ * Calculate initial layout for the lineage graph
+ */
 export const calculateInitialLayout = (
   nodes: NodeData[],
   edges: EdgeData[]
-): { flowNodes: Node[], flowEdges: Edge[] } => {
-  // Create a map of node IDs to track dependencies
-  const nodeMap = new Map();
-  const incomingEdges = new Map();
-  const outgoingEdges = new Map();
+): { flowNodes: Node<NodeData>[]; flowEdges: Edge<EdgeData>[]; } => {
+  const flowNodes: Node<NodeData>[] = [];
+  const nodeMap = new Map<string, Node<NodeData>>();
   
-  // Initialize maps
-  nodes.forEach(node => {
-    nodeMap.set(node.id, node);
-    incomingEdges.set(node.id, []);
-    outgoingEdges.set(node.id, []);
-  });
-  
-  // Map connections between nodes
-  edges.forEach(edge => {
-    if (outgoingEdges.has(edge.source)) {
-      outgoingEdges.get(edge.source).push(edge.target);
-    }
+  // First pass: create nodes and store in the map
+  nodes.forEach((node, index) => {
+    // Position nodes in a grid layout initially
+    const rows = Math.ceil(Math.sqrt(nodes.length));
+    const cols = Math.ceil(nodes.length / rows);
     
-    if (incomingEdges.has(edge.target)) {
-      incomingEdges.get(edge.target).push(edge.source);
-    }
-  });
-  
-  // Calculate node levels based on dependencies
-  const nodeLevels = new Map();
-  const calculateLevel = (nodeId: string, visited = new Set<string>()): number => {
-    // Prevent infinite loops with circular dependencies
-    if (visited.has(nodeId)) return 0;
+    const row = Math.floor(index / cols);
+    const col = index % cols;
     
-    visited.add(nodeId);
+    // Space nodes evenly in a grid
+    const xSpacing = 400;
+    const ySpacing = 300;
     
-    // If node has no incoming edges, it's a source node (level 0)
-    const incoming = incomingEdges.get(nodeId) || [];
-    if (incoming.length === 0) return 0;
+    const x = col * xSpacing;
+    const y = row * ySpacing;
     
-    // Node level is 1 + max level of all its dependencies
-    let maxLevel = 0;
-    for (const sourceId of incoming) {
-      const sourceLevel = nodeLevels.has(sourceId) 
-        ? nodeLevels.get(sourceId) 
-        : calculateLevel(sourceId, new Set(visited));
-      maxLevel = Math.max(maxLevel, sourceLevel);
-    }
-    
-    return maxLevel + 1;
-  };
-  
-  // Calculate levels for all nodes
-  nodes.forEach(node => {
-    if (!nodeLevels.has(node.id)) {
-      nodeLevels.set(node.id, calculateLevel(node.id));
-    }
-  });
-  
-  // Group nodes by their level
-  const nodesByLevel = new Map();
-  nodeLevels.forEach((level, nodeId) => {
-    if (!nodesByLevel.has(level)) {
-      nodesByLevel.set(level, []);
-    }
-    nodesByLevel.get(level).push(nodeId);
-  });
-  
-  // Sort levels for consistent layout
-  const sortedLevels = Array.from(nodesByLevel.keys()).sort((a, b) => a - b);
-  
-  // First pass: Order nodes within each level to minimize crossings
-  sortedLevels.forEach((level, levelIndex) => {
-    if (levelIndex === 0) return; // No need to sort the first level
-    
-    const nodesInLevel = nodesByLevel.get(level);
-    const prevLevelNodes = nodesByLevel.get(sortedLevels[levelIndex - 1]);
-    
-    // Order nodes based on the average position of their parent nodes
-    nodesInLevel.sort((nodeIdA, nodeIdB) => {
-      const parentsA = incomingEdges.get(nodeIdA) || [];
-      const parentsB = incomingEdges.get(nodeIdB) || [];
-      
-      // Calculate the average index of parent nodes for each node
-      const avgParentIndexA = parentsA.length ? 
-        parentsA.reduce((sum, parentId) => sum + prevLevelNodes.indexOf(parentId), 0) / parentsA.length : 
-        Number.MAX_SAFE_INTEGER;
-      
-      const avgParentIndexB = parentsB.length ? 
-        parentsB.reduce((sum, parentId) => sum + prevLevelNodes.indexOf(parentId), 0) / parentsB.length : 
-        Number.MAX_SAFE_INTEGER;
-      
-      return avgParentIndexA - avgParentIndexB;
-    });
-  });
-  
-  // Position nodes based on their level and order with improved spacing
-  const levelWidth = 350; // Increased horizontal spacing between levels
-  const nodeHeight = 180; // Increased estimated node height for better spacing
-  const nodeSpacing = 60; // Vertical spacing between nodes
-  const nodePositions: Record<string, { x: number; y: number }> = {};
-  
-  sortedLevels.forEach((level) => {
-    const nodesInLevel = nodesByLevel.get(level) || [];
-    // Calculate total required height including spacing
-    const totalHeight = nodesInLevel.length * nodeHeight + (nodesInLevel.length - 1) * nodeSpacing;
-    const startY = -totalHeight / 2; // Center vertically
-    
-    nodesInLevel.forEach((nodeId, index) => {
-      // Position with extra spacing between nodes
-      nodePositions[nodeId] = {
-        x: level * levelWidth,
-        // Position nodes with explicit spacing between them
-        y: startY + index * (nodeHeight + nodeSpacing),
-      };
-    });
-  });
-  
-  // Apply force-based adjustments to reduce node overlaps
-  const applyForceDirectedAdjustments = () => {
-    const repulsionForce = 100; // Strength of repulsion between nodes
-    const iterations = 30; // Number of iterations for force calculation
-    
-    for (let i = 0; i < iterations; i++) {
-      // For each pair of nodes, calculate repulsion and adjust positions
-      const nodeIds = Array.from(nodePositions.keys());
-      
-      for (let j = 0; j < nodeIds.length; j++) {
-        for (let k = j + 1; k < nodeIds.length; k++) {
-          const id1 = nodeIds[j];
-          const id2 = nodeIds[k];
-          
-          const pos1 = nodePositions[id1];
-          const pos2 = nodePositions[id2];
-          
-          // Skip nodes that are far apart horizontally (different levels)
-          if (Math.abs(pos1.x - pos2.x) > levelWidth) continue;
-          
-          // Calculate distance and direction
-          const dx = pos2.x - pos1.x;
-          const dy = pos2.y - pos1.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          // If nodes are too close, apply repulsion
-          if (distance < nodeHeight) {
-            // Only apply strong vertical repulsion when nodes are at the same level
-            const repulsion = repulsionForce / Math.max(distance, 10);
-            const dirX = dx / distance;
-            const dirY = dy / distance;
-            
-            // Mostly adjust vertical position
-            const adjustX = Math.abs(dx) < 10 ? dirX * repulsion * 0.1 : 0;
-            const adjustY = dirY * repulsion;
-            
-            // Apply adjustments (with more weight to vertical adjustment)
-            pos1.x -= adjustX;
-            pos1.y -= adjustY;
-            pos2.x += adjustX;
-            pos2.y += adjustY;
-          }
-        }
-      }
-    }
-  };
-  
-  // Apply force-directed adjustments to reduce overlaps
-  applyForceDirectedAdjustments();
-  
-  // Create React Flow nodes with positioned data
-  const flowNodes = nodes.map((node) => {
-    const position = nodePositions[node.id] || { x: Math.random() * 500, y: Math.random() * 500 };
-    
-    return {
+    const flowNode: Node<NodeData> = {
       id: node.id,
       type: 'default',
-      position,
+      position: { x, y },
       data: { ...node },
-      className: `node-${node.type}`,
     };
+    
+    flowNodes.push(flowNode);
+    nodeMap.set(node.id, flowNode);
   });
   
-  // Create edges with specific connection points and styling
-  const flowEdges = edges.map((edge) => {
+  // Adjust positions to avoid node overlaps
+  const nodesWithLevels = assignLevels(flowNodes, edges);
+  const levelGroups = groupNodesByLevel(nodesWithLevels);
+  
+  // Position nodes by level
+  positionNodesByLevel(levelGroups);
+  
+  // Handle edges
+  const flowEdges: Edge<EdgeData>[] = edges.map((edge) => {
+    const sourceNode = nodeMap.get(edge.source);
+    const targetNode = nodeMap.get(edge.target);
+    
+    // Default position if nodes not found
+    let sourcePosition = Position.Right;
+    let targetPosition = Position.Left;
+    
+    // Determine source and target positions based on node placement
+    if (sourceNode && targetNode) {
+      if (sourceNode.position.y > targetNode.position.y + 100) {
+        sourcePosition = Position.Top;
+        targetPosition = Position.Bottom;
+      } else if (sourceNode.position.y < targetNode.position.y - 100) {
+        sourcePosition = Position.Bottom;
+        targetPosition = Position.Top;
+      } else if (sourceNode.position.x < targetNode.position.x) {
+        sourcePosition = Position.Right;
+        targetPosition = Position.Left;
+      } else {
+        sourcePosition = Position.Left;
+        targetPosition = Position.Right;
+      }
+    }
+    
     return {
-      id: edge.id,
+      id: `${edge.source}-${edge.target}`,
       source: edge.source,
       target: edge.target,
-      data: edge,
+      sourceHandle: sourcePosition,
+      targetHandle: targetPosition,
       type: 'default',
-      animated: false,
-      // Connect to the header section of nodes
-      sourceHandle: 'header',
-      targetHandle: 'header',
+      data: { ...edge },
       markerEnd: {
-        type: MarkerType.ArrowClosed,
+        type: 'arrowclosed',
         width: 15,
         height: 15,
         color: '#64748b',
       },
     };
   });
-
+  
   return { flowNodes, flowEdges };
+};
+
+/**
+ * Assign depth levels to nodes based on edge connections
+ */
+const assignLevels = (nodes: Node<NodeData>[], edges: EdgeData[]): Node<NodeData>[] => {
+  const nodeMap = new Map<string, Node<NodeData> & { level?: number }>();
+  
+  // Initialize the map
+  nodes.forEach(node => {
+    nodeMap.set(node.id, { ...node, level: 0 });
+  });
+  
+  // Create adjacency list for topological sorting
+  const graph: Record<string, string[]> = {};
+  const inDegree: Record<string, number> = {};
+  
+  // Initialize
+  nodes.forEach(node => {
+    graph[node.id] = [];
+    inDegree[node.id] = 0;
+  });
+  
+  // Build the graph
+  edges.forEach(edge => {
+    if (graph[edge.source]) {
+      graph[edge.source].push(edge.target);
+      inDegree[edge.target] = (inDegree[edge.target] || 0) + 1;
+    }
+  });
+  
+  // Find source nodes (nodes with no incoming edges)
+  const sourceNodes: string[] = [];
+  nodes.forEach(node => {
+    if (inDegree[node.id] === 0) {
+      sourceNodes.push(node.id);
+    }
+  });
+  
+  // Perform BFS to assign levels
+  const queue = [...sourceNodes];
+  
+  while (queue.length > 0) {
+    const nodeId = queue.shift();
+    if (!nodeId) continue;
+    
+    const node = nodeMap.get(nodeId);
+    const currentLevel = node?.level || 0;
+    
+    // Add all adjacent nodes to queue and update their level
+    const neighbors = graph[nodeId] || [];
+    neighbors.forEach(neighborId => {
+      const neighbor = nodeMap.get(neighborId);
+      if (neighbor) {
+        // Set neighbor level to be at least one level more than current node
+        neighbor.level = Math.max((neighbor.level || 0), currentLevel + 1);
+      }
+      
+      // Decrease in-degree of neighbor
+      inDegree[neighborId]--;
+      
+      // If in-degree becomes 0, add to queue
+      if (inDegree[neighborId] === 0) {
+        queue.push(neighborId);
+      }
+    });
+  }
+  
+  // Return nodes with levels
+  return Array.from(nodeMap.values());
+};
+
+/**
+ * Group nodes by their level
+ */
+const groupNodesByLevel = (nodes: (Node<NodeData> & { level?: number })[]): Record<number, Node<NodeData>[]> => {
+  const levelGroups: Record<number, Node<NodeData>[]> = {};
+  
+  nodes.forEach(node => {
+    const level = node.level || 0;
+    if (!levelGroups[level]) {
+      levelGroups[level] = [];
+    }
+    levelGroups[level].push(node);
+  });
+  
+  return levelGroups;
+};
+
+/**
+ * Position nodes by their level
+ */
+const positionNodesByLevel = (levelGroups: Record<number, Node<NodeData>[]>): void => {
+  const levelSpacing = 400; // Horizontal spacing between levels
+  const nodeSpacing = 250;  // Vertical spacing between nodes in the same level
+  
+  Object.entries(levelGroups).forEach(([levelStr, nodes]) => {
+    const level = parseInt(levelStr, 10);
+    const x = level * levelSpacing + 50;
+    
+    nodes.forEach((node, index) => {
+      // Center nodes vertically
+      const totalHeight = nodes.length * nodeSpacing;
+      const startY = -totalHeight / 2 + nodeSpacing / 2;
+      const y = startY + index * nodeSpacing;
+      
+      node.position = { x, y };
+    });
+  });
 };
