@@ -118,7 +118,7 @@
   @apply ring-2 ring-primary/40;
 }
 
-/* Override edge styles for better visibility */
+/* Override edge styles for better visibility and performance */
 .lineage-flow .react-flow__edge {
   cursor: pointer;
 }
@@ -126,6 +126,7 @@
 .lineage-flow .react-flow__edge path {
   stroke-width: 2;
   @apply stroke-slate-400;
+  transition: none !important; /* Disable transitions for better performance */
 }
 
 .lineage-flow .react-flow__edge.selected path {
@@ -136,6 +137,15 @@
 .lineage-flow .react-flow__handle {
   width: 8px;
   height: 8px;
+}
+
+/* Improved performance for panning/zooming operations */
+.react-flow__pane {
+  cursor: grab;
+}
+
+.react-flow__pane.dragging {
+  cursor: grabbing;
 }
 
 /* Detail panels styling - made solid */
@@ -193,4 +203,21 @@
 
 .node-report {
   @apply bg-purple-100 dark:bg-purple-900 border border-purple-200 dark:border-purple-700;
+}
+
+/* Performance optimizations for large datasets */
+.react-flow__node {
+  will-change: transform;
+}
+
+.react-flow__edge {
+  will-change: stroke, stroke-width;
+}
+
+.react-flow__edge-path {
+  will-change: d;
+}
+
+.react-flow__viewport {
+  will-change: transform;
 }

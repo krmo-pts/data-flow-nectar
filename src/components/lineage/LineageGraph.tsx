@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useTransition } from 'react';
 import {
   useNodesState,
   useEdgesState,
@@ -24,6 +24,7 @@ import FlowComponent from './FlowComponent';
 
 const LineageGraph: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPending, startTransition] = useTransition();
   
   const {
     nodes,
@@ -48,22 +49,24 @@ const LineageGraph: React.FC = () => {
     setEdgesState(edges);
   }, [edges, setEdgesState]);
 
-  // Ensure node position changes are reflected in the main state
+  // More efficient node position update
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
+    // Apply changes to the local state immediately for smooth UI update
     onNodesChange(changes);
     
-    // We'll update the main nodes state with position changes
-    // This is important to persist node positions after dragging
-    changes.forEach(change => {
-      if (change.type === 'position' && change.position) {
-        setNodes(prevNodes => 
-          prevNodes.map(node => 
-            node.id === change.id 
-              ? { ...node, position: change.position || node.position }
-              : node
-          )
-        );
-      }
+    // Use transition to update the main state without blocking the UI
+    startTransition(() => {
+      changes.forEach(change => {
+        if (change.type === 'position' && change.position) {
+          setNodes(prevNodes => 
+            prevNodes.map(node => 
+              node.id === change.id 
+                ? { ...node, position: change.position || node.position }
+                : node
+            )
+          );
+        }
+      });
     });
   }, [onNodesChange, setNodes]);
 
@@ -115,7 +118,7 @@ const LineageGraph: React.FC = () => {
       <DatasetToggle 
         useLargeDataset={useLargeDataset} 
         toggleDataset={toggleDataset} 
-        isLoading={isLoading} 
+        isLoading={isLoading || isPending}
       />
       
       <ReactFlowProvider>
