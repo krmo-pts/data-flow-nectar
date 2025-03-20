@@ -39,10 +39,6 @@ export interface NodeData {
   isFocus?: boolean; // Property to mark this as the focus node
   impactType?: ImpactType; // New property to mark impact relationship to focus node
   impactDistance?: number; // How many nodes away from the focus node
-  expandedUpstream?: boolean; // Whether upstream nodes are expanded
-  expandedDownstream?: boolean; // Whether downstream nodes are expanded
-  upstreamNodesShown?: string[]; // IDs of upstream nodes currently shown
-  downstreamNodesShown?: string[]; // IDs of downstream nodes currently shown
 }
 
 export interface EdgeData {
