@@ -31,6 +31,9 @@ export interface NodeData {
   owner?: string;
   lastUpdated?: string;
   tags?: string[];
+  level?: number; // Optional level property for hierarchical layouts
+  parentIds?: string[]; // Optional array of parent node IDs
+  childIds?: string[]; // Optional array of child node IDs
 }
 
 export interface EdgeData {

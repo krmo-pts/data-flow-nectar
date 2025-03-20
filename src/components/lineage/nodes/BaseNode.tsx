@@ -8,7 +8,8 @@ import {
   FileText, 
   BarChart3,
   Server,
-  Cloud
+  Cloud,
+  ArrowRight
 } from 'lucide-react';
 
 const getPlatformIcon = (platform: string) => {
@@ -48,11 +49,11 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
   const nodeTypeColor = getNodeTypeColor(data.type);
   
   return (
-    <div className={`px-4 py-3 rounded-lg shadow-sm border ${selected ? 'border-primary shadow-md ring-2 ring-primary/20' : 'border-border'} bg-background transition-all duration-200`}>
+    <div className={`px-4 py-3 rounded-lg shadow-sm border ${selected ? 'border-primary shadow-md ring-2 ring-primary/20' : 'border-border'} bg-background transition-all duration-200 min-w-[180px]`}>
       <div className="flex items-center mb-2">
         <div className="flex items-center space-x-2">
           {getPlatformIcon(data.platform)}
-          <span className="text-sm font-medium truncate max-w-[120px]" title={data.name}>
+          <span className="text-sm font-medium truncate max-w-[140px]" title={data.name}>
             {data.name}
           </span>
         </div>
@@ -79,6 +80,11 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
         position={Position.Right} 
         className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
       />
+      
+      {/* Directional indicator */}
+      <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+        <ArrowRight className="h-3 w-3" />
+      </div>
     </div>
   );
 };

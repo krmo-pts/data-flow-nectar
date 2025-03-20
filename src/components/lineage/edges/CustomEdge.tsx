@@ -26,6 +26,7 @@ const CustomEdge = ({
     targetX,
     targetY,
     targetPosition,
+    curvature: 0.3, // Adjust curvature for clearer paths
   });
 
   return (
