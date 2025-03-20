@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
@@ -67,7 +66,6 @@ const LineageGraph: React.FC = () => {
     setNodes(flowNodes);
     setEdges(flowEdges);
     
-    // Fit view after a short delay to ensure nodes are rendered
     setTimeout(() => {
       reactFlowInstance.fitView({ padding: 0.2 });
     }, 50);
@@ -79,7 +77,6 @@ const LineageGraph: React.FC = () => {
 
   const onConnect = useCallback(
     (params: Connection) => {
-      // In a real application, you would create a new edge here and persist it
       setEdges((eds) => 
         addEdge({
           ...params,
@@ -122,6 +119,7 @@ const LineageGraph: React.FC = () => {
         fitView
         snapToGrid={true}
         attributionPosition="bottom-right"
+        className="lineage-flow"
       >
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         <Controls className="glass-panel" />
