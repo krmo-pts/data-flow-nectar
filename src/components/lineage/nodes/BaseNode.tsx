@@ -66,9 +66,11 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
   const toggleShowAll = () => setShowAllColumns(!showAllColumns);
   
   return (
-    <div className={`shadow-md rounded-lg overflow-hidden bg-white transition-all duration-200 ${selected ? 'ring-2 ring-primary/40' : ''}`} style={{ minWidth: '240px' }}>
+    <>
+      {/* We removed the outer div and applied styling directly to React Flow's default node container */}
+      
       {/* Header section */}
-      <div className="border-b border-gray-200 px-4 py-2 bg-gray-50 flex items-center justify-between">
+      <div className="border-b border-gray-200 px-4 py-2 bg-gray-50 flex items-center justify-between rounded-t-lg">
         <div className="flex items-center space-x-2 text-sm text-gray-700">
           {getPlatformIcon(data.platform)}
           <div className="flex flex-col">
@@ -95,7 +97,7 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
       
       {/* Columns section */}
       {expanded && (
-        <div className="bg-white">
+        <div className="bg-white rounded-b-lg">
           {visibleColumns.length > 0 ? (
             <div className="divide-y divide-gray-100">
               {visibleColumns.map((column, index) => (
@@ -113,7 +115,7 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
           
           {/* Footer controls */}
           {columns.length > 5 && (
-            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600">
+            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600 rounded-b-lg">
               <button 
                 className="hover:underline flex items-center space-x-1"
                 onClick={toggleShowAll}
@@ -150,7 +152,7 @@ const BaseNode = ({ data, selected }: NodeProps<NodeData>) => {
         position={Position.Right} 
         className="w-2 h-2 rounded-full border-2 bg-background border-primary" 
       />
-    </div>
+    </>
   );
 };
 

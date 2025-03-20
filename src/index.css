@@ -95,13 +95,20 @@
   }
 }
 
+/* Update to style the React Flow node directly */
 .react-flow__node {
-  @apply shadow-md rounded-md border border-node-border bg-node p-4;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 0.5rem;
+  min-width: 240px;
   transition: all 0.2s ease-in-out;
+  overflow: hidden;
 }
 
 .react-flow__node.selected {
-  @apply border-2 border-node-highlight shadow-lg;
+  @apply ring-2 ring-primary/40;
 }
 
 .react-flow__node-default {
