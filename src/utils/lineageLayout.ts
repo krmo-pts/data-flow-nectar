@@ -99,11 +99,11 @@ export const calculateInitialLayout = (
   
   // Position nodes based on their level and order
   const levelWidth = 250; // Horizontal spacing between levels
+  const nodeHeight = 120; // Estimated node height - Define nodeHeight here at this scope
   const nodePositions: Record<string, { x: number; y: number }> = {};
   
   sortedLevels.forEach((level) => {
     const nodesInLevel = nodesByLevel.get(level) || [];
-    const nodeHeight = 120; // Estimated node height
     const totalHeight = nodesInLevel.length * nodeHeight;
     const startY = -totalHeight / 2; // Center vertically
     
