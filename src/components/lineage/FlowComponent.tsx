@@ -87,7 +87,7 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
     maxZoom: 2,
     minZoom: 0.2,
     snapToGrid: true,
-    snapGrid: [15, 15],
+    snapGrid: [15, 15] as [number, number], // Fixed: Explicitly cast as tuple [number, number]
     nodesDraggable: true,
     elevateEdgesOnSelect: true,
     elevateNodesOnSelect: true,
