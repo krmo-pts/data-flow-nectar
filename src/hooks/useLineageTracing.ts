@@ -2,6 +2,8 @@
 import { useCallback, useState } from 'react';
 import { useReactFlow } from 'reactflow';
 import { useToast } from '@/hooks/use-toast';
+import { createTracingMaps, traceLineageDependencies } from '@/utils/lineage/dependencyTracing';
+import { NodeData } from '@/types/lineage';
 
 interface UseLineageTracingProps {
   nodeId: string;
@@ -26,97 +28,36 @@ export const useLineageTracing = ({ nodeId }: UseLineageTracingProps) => {
     // For extremely large graphs, implement chunking
     const isLargeGraph = edges.length > 300 || nodes.length > 150;
     
-    // Build node connection maps for tracing
-    const incomingMap = new Map<string, string[]>();
-    const outgoingMap = new Map<string, string[]>();
-    
-    // Initialize maps
-    nodes.forEach(node => {
-      incomingMap.set(node.id, []);
-      outgoingMap.set(node.id, []);
-    });
-    
-    // Fill maps with connections
-    edges.forEach(edge => {
-      const { source, target } = edge;
-      
-      // Add to outgoing map
-      if (outgoingMap.has(source)) {
-        const connections = outgoingMap.get(source) || [];
-        outgoingMap.set(source, [...connections, target]);
-      }
-      
-      // Add to incoming map
-      if (incomingMap.has(target)) {
-        const connections = incomingMap.get(target) || [];
-        incomingMap.set(target, [...connections, source]);
-      }
-    });
-    
-    // Recursive function to trace dependencies in either direction
-    const traceDependencies = (
-      currentNodeId: string,
-      visitedNodes: Set<string>,
-      affectedNodeIds: Set<string>,
-      affectedEdgeIds: Set<string>,
-      traceDirection: 'incoming' | 'outgoing',
-      depth: number = 0,
-      maxDepth: number = 15
-    ) => {
-      // Stop recursion if we've visited this node before or reached max depth
-      if (visitedNodes.has(currentNodeId) || depth > maxDepth) return;
-      visitedNodes.add(currentNodeId);
-      
-      // Get connections based on direction
-      const connections = traceDirection === 'incoming' 
-        ? incomingMap.get(currentNodeId) || []
-        : outgoingMap.get(currentNodeId) || [];
-      
-      for (const connectedNodeId of connections) {
-        // Add to affected nodes
-        affectedNodeIds.add(connectedNodeId);
-        
-        // Add edge to affected edges
-        const edgeId = traceDirection === 'incoming'
-          ? `${connectedNodeId}->${currentNodeId}` // Source to target
-          : `${currentNodeId}->${connectedNodeId}`; // Source to target
-        
-        // Find the actual edge ID from the edges array
-        const edge = edges.find(e => 
-          (e.source === connectedNodeId && e.target === currentNodeId && traceDirection === 'incoming') ||
-          (e.source === currentNodeId && e.target === connectedNodeId && traceDirection === 'outgoing')
-        );
-        
-        if (edge) {
-          affectedEdgeIds.add(edge.id);
-        }
-        
-        // Continue tracing recursively
-        traceDependencies(
-          connectedNodeId,
-          visitedNodes,
-          affectedNodeIds,
-          affectedEdgeIds,
-          traceDirection,
-          depth + 1,
-          maxDepth
-        );
-      }
-    };
-    
     // Start processing
     const processLineage = () => {
-      const visitedNodeIds = new Set<string>();
+      // Create tracing maps for efficient traversal
+      const nodesData = nodes.map(node => node.data as NodeData);
+      const edgesData = edges.map(edge => ({ 
+        ...edge.data, 
+        source: edge.source, 
+        target: edge.target,
+        id: edge.id
+      }));
+      
+      const { nodeMap, incomingEdgesMap, outgoingEdgesMap } = createTracingMaps(nodesData, edgesData);
+      
+      // Initialize tracking sets
+      const visited = new Set<string>();
       const affectedNodeIds = new Set<string>();
       const affectedEdgeIds = new Set<string>();
       
-      // Start tracing from the selected node
-      traceDependencies(
+      // Use the new tracing function to find all affected nodes and edges
+      traceLineageDependencies(
         nodeId,
-        visitedNodeIds,
+        direction,
+        nodeMap,
+        incomingEdgesMap,
+        outgoingEdgesMap,
+        visited,
+        10, // Max depth to prevent infinite recursion
+        0,  // Initial depth
         affectedNodeIds,
-        affectedEdgeIds,
-        direction
+        affectedEdgeIds
       );
       
       // If it's a large graph, process in chunks
@@ -141,7 +82,8 @@ export const useLineageTracing = ({ nodeId }: UseLineageTracingProps) => {
       // Update edges visibility
       setEdges(edges => {
         return edges.map(edge => {
-          if (affectedEdgeIds.has(edge.id)) {
+          const edgeKey = `${edge.source}->${edge.target}`;
+          if (affectedEdgeIds.has(edgeKey)) {
             return {
               ...edge,
               hidden: shouldHide
@@ -151,9 +93,14 @@ export const useLineageTracing = ({ nodeId }: UseLineageTracingProps) => {
         });
       });
       
-      // Update nodes visibility
+      // Update nodes visibility, but preserve focus nodes
       setNodes(nodes => {
         return nodes.map(node => {
+          // Never hide focus nodes
+          if (node.data?.isFocus) {
+            return node;
+          }
+          
           if (affectedNodeIds.has(node.id)) {
             return {
               ...node,
