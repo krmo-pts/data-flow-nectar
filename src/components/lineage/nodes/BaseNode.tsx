@@ -1,5 +1,5 @@
 
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeData } from '../../../types/lineage';
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +70,17 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   const [expanded, setExpanded] = useState(true);
   const [showAllColumns, setShowAllColumns] = useState(false);
   
+  // Log when dragging state changes
+  useEffect(() => {
+    console.log(`Node ${data.id} dragging state:`, {
+      id: data.id,
+      name: data.name,
+      dragging: dragging,
+      expanded: expanded,
+      columnCount: data.columns?.length || 0
+    });
+  }, [dragging, data.id, data.name, expanded, data.columns?.length]);
+  
   const nodeTypeClass = getNodeTypeClass(data.type);
   const maxVisibleColumns = showAllColumns ? 100 : 5;
 
@@ -80,11 +91,13 @@ const BaseNode = ({ data, selected, dragging }: NodeProps<NodeData>) => {
   
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
+    console.log(`Toggling expand for node ${data.id}:`, !expanded);
     setExpanded(!expanded);
   };
   
   const toggleShowAll = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent node selection when toggling
+    console.log(`Toggling showAll for node ${data.id}:`, !showAllColumns);
     setShowAllColumns(!showAllColumns);
   };
   

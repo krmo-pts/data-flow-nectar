@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { ReactFlow, Connection } from 'reactflow';
 
 import { nodeTypes, edgeTypes } from './flow/FlowTypeDefinitions';
@@ -42,12 +42,29 @@ const FlowComponent: React.FC<FlowComponentProps> = ({
   // Optimize edges rendering based on zoom level and dragging state
   const { visibleEdges, zoom } = useEdgeOptimizer(edges, nodes, isDragging);
 
+  // Log drag state changes
+  useEffect(() => {
+    console.log('FlowComponent drag state changed:', {
+      isDragging,
+      nodesCount: nodes.length,
+      edgesCount: edges.length,
+      visibleEdgesCount: visibleEdges.length,
+      zoom
+    });
+  }, [isDragging, nodes.length, edges.length, visibleEdges.length, zoom]);
+
   // Determine which edges to show - during dragging show fewer edges for performance
   const edgesToRender = isDragging && edges.length > 50 
     ? visibleEdges.slice(0, 50) // During dragging, show minimal edges
     : zoom < 0.5 && edges.length > 100 
       ? visibleEdges // When zoomed out with many edges, filter
       : edges; // Otherwise show all edges
+      
+  console.log('Rendering edges:', {
+    totalEdges: edges.length,
+    renderedEdges: edgesToRender.length,
+    filtering: isDragging || (zoom < 0.5 && edges.length > 100)
+  });
 
   return (
     <ReactFlow

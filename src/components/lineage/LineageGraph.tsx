@@ -63,10 +63,26 @@ const LineageGraph: React.FC = () => {
     
     // If we have a position change, check its dragging status
     if (positionChange) {
-      setIsDragging(!!positionChange.dragging);
+      const wasDragging = isDragging;
+      const isDraggingNow = !!positionChange.dragging;
+      
+      console.log('Node drag state:', {
+        nodeId: positionChange.id,
+        position: positionChange.position,
+        isDragging: isDraggingNow,
+        wasDragging: wasDragging,
+        changeType: positionChange.dragging ? 'dragging' : 'drag ended'
+      });
+      
+      setIsDragging(isDraggingNow);
       
       // Only update the main state after drag completes
       if (!positionChange.dragging && positionChange.position) {
+        console.log('Finalizing node position after drag:', {
+          nodeId: positionChange.id,
+          position: positionChange.position
+        });
+        
         startTransition(() => {
           // Update node positions in the main state
           setNodes(prevNodes => 
@@ -79,7 +95,7 @@ const LineageGraph: React.FC = () => {
         });
       }
     }
-  }, [onNodesChange, setNodes]);
+  }, [onNodesChange, setNodes, isDragging]);
 
   // Handle edge changes - skip during dragging for better performance
   const handleEdgesChange = useCallback((changes: EdgeChange[]) => {
@@ -102,6 +118,8 @@ const LineageGraph: React.FC = () => {
           return nextEdges;
         });
       });
+    } else {
+      console.log('Skipping edge updates during dragging for performance');
     }
   }, [onEdgesChange, setEdges, isDragging]);
 
