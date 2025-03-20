@@ -32,6 +32,7 @@ import { useLineageSearch } from '@/hooks/useLineageSearch';
 import { useDetailsPanels } from '@/hooks/useDetailsPanels';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 const nodeTypes: NodeTypes = {
   default: BaseNode,
@@ -47,6 +48,7 @@ const LineageGraph: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [useLargeDataset, setUseLargeDataset] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const reactFlowInstance = useReactFlow();
   const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
@@ -67,24 +69,36 @@ const LineageGraph: React.FC = () => {
     
     // Use setTimeout to allow the UI to update with the loading state
     setTimeout(() => {
-      const dataToUse = useLargeDataset ? mockLargeLineageData : mockLineageData;
-      console.log(`Loading ${dataToUse.nodes.length} nodes and ${dataToUse.edges.length} edges`);
-      
-      const { flowNodes, flowEdges } = calculateInitialLayout(
-        dataToUse.nodes,
-        dataToUse.edges
-      );
-      
-      setNodes(flowNodes);
-      setEdges(flowEdges);
-      
-      // Give more time for the layout to stabilize before fitting view
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
+      try {
+        const dataToUse = useLargeDataset ? mockLargeLineageData : mockLineageData;
+        console.log(`Loading ${dataToUse.nodes.length} nodes and ${dataToUse.edges.length} edges`);
+        
+        const { flowNodes, flowEdges } = calculateInitialLayout(
+          dataToUse.nodes,
+          dataToUse.edges
+        );
+        
+        setNodes(flowNodes);
+        setEdges(flowEdges);
+        
+        // Give more time for the layout to stabilize before fitting view
+        // Increase timeout for large dataset
+        const timeoutDuration = useLargeDataset ? 1000 : 300;
+        setTimeout(() => {
+          reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
+          setIsLoading(false);
+        }, timeoutDuration);
+      } catch (error) {
+        console.error('Error loading lineage data:', error);
+        toast({
+          title: 'Error loading data',
+          description: 'There was a problem loading the lineage data. Please try again.',
+          variant: 'destructive',
+        });
         setIsLoading(false);
-      }, 300);
-    }, 100);
-  }, [reactFlowInstance, setEdges, setNodes, useLargeDataset]);
+      }
+    }, useLargeDataset ? 200 : 100); // Increased timeout for large dataset initialization
+  }, [reactFlowInstance, setEdges, setNodes, useLargeDataset, toast]);
 
   useEffect(() => {
     initialLayout();
@@ -120,8 +134,15 @@ const LineageGraph: React.FC = () => {
   }, [initialLayout, resetPanels]);
 
   const toggleDataset = useCallback(() => {
-    setUseLargeDataset(prev => !prev);
-  }, []);
+    if (!isLoading) {
+      setUseLargeDataset(prev => !prev);
+    } else {
+      toast({
+        title: 'Loading in progress',
+        description: 'Please wait for the current dataset to finish loading before switching.',
+      });
+    }
+  }, [isLoading, toast]);
 
   return (
     <div className="w-full h-full relative">
@@ -132,6 +153,11 @@ const LineageGraph: React.FC = () => {
             <p className="text-sm text-muted-foreground">
               Loading {useLargeDataset ? 'large' : 'small'} dataset...
             </p>
+            {useLargeDataset && (
+              <p className="text-xs text-muted-foreground mt-1">
+                (200 nodes and ~400 edges - this may take a moment)
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -142,6 +168,7 @@ const LineageGraph: React.FC = () => {
             id="dataset-toggle" 
             checked={useLargeDataset} 
             onCheckedChange={toggleDataset} 
+            disabled={isLoading}
           />
           <Label htmlFor="dataset-toggle">Use large dataset ({useLargeDataset ? '200 nodes' : 'small'})</Label>
         </div>

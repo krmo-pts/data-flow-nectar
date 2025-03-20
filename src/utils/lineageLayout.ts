@@ -31,6 +31,14 @@ export const calculateInitialLayout = (
     }
   });
   
+  // Check if we're using a large dataset (more efficient than passing it as a parameter)
+  const isLargeDataset = nodes.length > 100;
+  
+  // For large datasets, use a simplified layout algorithm
+  if (isLargeDataset) {
+    return calculateLargeDatasetLayout(nodes, edges, nodeMap, incomingEdges, outgoingEdges);
+  }
+  
   // Calculate node levels based on dependencies
   const nodeLevels = new Map();
   const calculateLevel = (nodeId: string, visited = new Set<string>()): number => {
@@ -135,17 +143,14 @@ export const calculateInitialLayout = (
     prevLevelNodes = sortedNodes;
   }
   
-  // Adjust layout configuration based on dataset size
-  const isLargeDataset = nodes.length > 100;
-  
-  // For larger datasets, use more compact spacing
-  const levelWidth = isLargeDataset ? 300 : 400; 
-  const nodeHeight = isLargeDataset ? 100 : 150;
-  const nodeWidth = isLargeDataset ? 200 : 250;
-  const nodePaddingY = isLargeDataset ? 40 : 100;
-  
   // Position nodes based on their level and order
   const nodePositions: Record<string, { x: number; y: number }> = {};
+  
+  // For larger datasets, use more compact spacing
+  const levelWidth = 400; 
+  const nodeHeight = 150;
+  const nodeWidth = 250;
+  const nodePaddingY = 100;
   
   sortedLevels.forEach((level) => {
     const nodesInLevel = sortedNodesByLevel.get(level) || [];
@@ -193,6 +198,92 @@ export const calculateInitialLayout = (
 
   console.timeEnd('layoutCalculation');
   console.log(`Positioned ${flowNodes.length} nodes and ${flowEdges.length} edges`);
+  
+  return { flowNodes, flowEdges };
+};
+
+// Specialized layout algorithm for large datasets
+const calculateLargeDatasetLayout = (
+  nodes: NodeData[],
+  edges: EdgeData[],
+  nodeMap: Map<string, NodeData>,
+  incomingEdges: Map<string, string[]>,
+  outgoingEdges: Map<string, string[]>
+): { flowNodes: Node[], flowEdges: Edge[] } => {
+  console.log('Using optimized layout for large dataset');
+  
+  // Use force-directed-like layout for large datasets
+  const gridSize = Math.ceil(Math.sqrt(nodes.length));
+  const cellWidth = 250;
+  const cellHeight = 180;
+  const gridWidth = gridSize * cellWidth;
+  
+  // Categorize nodes into types to group them
+  const nodesByType: Record<string, string[]> = {};
+  
+  nodes.forEach(node => {
+    if (!nodesByType[node.type]) {
+      nodesByType[node.type] = [];
+    }
+    nodesByType[node.type].push(node.id);
+  });
+  
+  // Position nodes by type in a grid pattern
+  const nodePositions: Record<string, { x: number; y: number }> = {};
+  let currentTypeIndex = 0;
+  
+  for (const type in nodesByType) {
+    const nodesOfType = nodesByType[type];
+    const typeGridSize = Math.ceil(Math.sqrt(nodesOfType.length));
+    const typeStartX = (currentTypeIndex % 3) * gridWidth;
+    const typeStartY = Math.floor(currentTypeIndex / 3) * gridWidth;
+    
+    nodesOfType.forEach((nodeId, index) => {
+      const col = index % typeGridSize;
+      const row = Math.floor(index / typeGridSize);
+      
+      nodePositions[nodeId] = {
+        x: typeStartX + col * cellWidth + Math.random() * 20,
+        y: typeStartY + row * cellHeight + Math.random() * 20,
+      };
+    });
+    
+    currentTypeIndex++;
+  }
+  
+  // Create React Flow nodes with positioned data
+  const flowNodes = nodes.map((node) => {
+    const position = nodePositions[node.id] || { 
+      x: Math.random() * gridWidth, 
+      y: Math.random() * gridWidth 
+    };
+    
+    return {
+      id: node.id,
+      type: 'default',
+      position,
+      data: { ...node },
+      className: `node-${node.type}`,
+    };
+  });
+  
+  // Create edges with marker end and data
+  const flowEdges = edges.map((edge) => {
+    return {
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      data: edge,
+      type: 'default',
+      animated: false,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 15,
+        height: 15,
+        color: '#64748b',
+      },
+    };
+  });
   
   return { flowNodes, flowEdges };
 };
