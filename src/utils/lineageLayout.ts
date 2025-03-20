@@ -6,6 +6,8 @@ export const calculateInitialLayout = (
   nodes: NodeData[],
   edges: EdgeData[]
 ): { flowNodes: Node[], flowEdges: Edge[] } => {
+  console.time('layoutCalculation');
+  
   // Create a map of node IDs to track dependencies
   const nodeMap = new Map();
   const incomingEdges = new Map();
@@ -69,7 +71,8 @@ export const calculateInitialLayout = (
     nodesByLevel.get(level).push(nodeId);
   });
   
-  // Improved sorting to minimize edge crossings
+  // Optimize node positioning within levels to minimize edge crossings
+  // This implementation uses the barycenter heuristic for edge crossing minimization
   const sortNodesInLevel = (level: number, prevLevelNodes: string[] | null) => {
     const nodesInLevel = nodesByLevel.get(level) || [];
     
@@ -77,37 +80,47 @@ export const calculateInitialLayout = (
       return nodesInLevel;
     }
     
-    // Calculate average position of connected nodes from previous level
-    const nodePositionWeights = new Map<string, number>();
+    // For large datasets, limit the number of iterations for optimization
+    // to avoid performance issues
+    const maxIterations = nodes.length > 100 ? 1 : 3;
     
-    nodesInLevel.forEach(nodeId => {
-      const connected = incomingEdges.get(nodeId) || [];
-      let sum = 0;
-      let count = 0;
+    let currentOrder = [...nodesInLevel];
+    
+    for (let iteration = 0; iteration < maxIterations; iteration++) {
+      // Calculate average position of connected nodes from previous level
+      const nodePositionWeights = new Map<string, number>();
       
-      connected.forEach(sourceId => {
-        const sourceIndex = prevLevelNodes.indexOf(sourceId);
-        if (sourceIndex !== -1) {
-          sum += sourceIndex;
-          count++;
+      currentOrder.forEach(nodeId => {
+        const connected = incomingEdges.get(nodeId) || [];
+        let sum = 0;
+        let count = 0;
+        
+        connected.forEach(sourceId => {
+          const sourceIndex = prevLevelNodes.indexOf(sourceId);
+          if (sourceIndex !== -1) {
+            sum += sourceIndex;
+            count++;
+          }
+        });
+        
+        // If node is connected to previous level, assign a weight based on connected nodes' positions
+        // If not connected, we'll position it at the end
+        if (count > 0) {
+          nodePositionWeights.set(nodeId, sum / count);
+        } else {
+          nodePositionWeights.set(nodeId, prevLevelNodes.length);
         }
       });
       
-      // If node is connected to previous level, assign a weight based on connected nodes' positions
-      // If not connected, we'll position it at the end
-      if (count > 0) {
-        nodePositionWeights.set(nodeId, sum / count);
-      } else {
-        nodePositionWeights.set(nodeId, prevLevelNodes.length);
-      }
-    });
+      // Sort nodes based on their weights (average position of connected nodes)
+      currentOrder = [...currentOrder].sort((a, b) => {
+        const weightA = nodePositionWeights.get(a) || 0;
+        const weightB = nodePositionWeights.get(b) || 0;
+        return weightA - weightB;
+      });
+    }
     
-    // Sort nodes based on their weights (average position of connected nodes)
-    return [...nodesInLevel].sort((a, b) => {
-      const weightA = nodePositionWeights.get(a) || 0;
-      const weightB = nodePositionWeights.get(b) || 0;
-      return weightA - weightB;
-    });
+    return currentOrder;
   };
   
   // Sort nodes within each level to minimize edge crossings
@@ -122,11 +135,14 @@ export const calculateInitialLayout = (
     prevLevelNodes = sortedNodes;
   }
   
-  // Improved layout configuration with more spacing
-  const levelWidth = 400; // Increased horizontal spacing between levels
-  const nodeHeight = 150; // Estimated node height
-  const nodeWidth = 250; // Estimated node width
-  const nodePaddingY = 100; // Increased vertical padding between nodes
+  // Adjust layout configuration based on dataset size
+  const isLargeDataset = nodes.length > 100;
+  
+  // For larger datasets, use more compact spacing
+  const levelWidth = isLargeDataset ? 300 : 400; 
+  const nodeHeight = isLargeDataset ? 100 : 150;
+  const nodeWidth = isLargeDataset ? 200 : 250;
+  const nodePaddingY = isLargeDataset ? 40 : 100;
   
   // Position nodes based on their level and order
   const nodePositions: Record<string, { x: number; y: number }> = {};
@@ -175,5 +191,8 @@ export const calculateInitialLayout = (
     };
   });
 
+  console.timeEnd('layoutCalculation');
+  console.log(`Positioned ${flowNodes.length} nodes and ${flowEdges.length} edges`);
+  
   return { flowNodes, flowEdges };
 };
