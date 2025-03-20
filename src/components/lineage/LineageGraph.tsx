@@ -1,56 +1,51 @@
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-  ReactFlow,
-  MiniMap,
-  Controls,
-  Background,
   useNodesState,
   useEdgesState,
   addEdge,
   Connection,
-  Edge,
-  useReactFlow,
-  NodeTypes,
-  EdgeTypes,
-  BackgroundVariant,
   MarkerType,
+  ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { NodeData, EdgeData } from '@/types/lineage';
-import BaseNode from './nodes/BaseNode';
-import CustomEdge from './edges/CustomEdge';
-import NodeDetailsPanel from './NodeDetailsPanel';
-import EdgeDetailsPanel from './EdgeDetailsPanel';
-import SearchPanel from './SearchPanel';
-import ControlPanel from './ControlPanel';
-import { mockLineageData } from '@/data/mockLineageData';
-import { mockLargeLineageData } from '@/data/mockLargeLineageData';
-import { calculateInitialLayout } from '@/utils/lineageLayout';
 import { useLineageSearch } from '@/hooks/useLineageSearch';
 import { useDetailsPanels } from '@/hooks/useDetailsPanels';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { useLineageData } from '@/hooks/useLineageData';
 
-const nodeTypes: NodeTypes = {
-  default: BaseNode,
-};
-
-const edgeTypes: EdgeTypes = {
-  default: CustomEdge,
-};
+import NodeDetailsPanel from './NodeDetailsPanel';
+import EdgeDetailsPanel from './EdgeDetailsPanel';
+import DatasetToggle from './DatasetToggle';
+import LoadingOverlay from './LoadingOverlay';
+import FlowComponent from './FlowComponent';
 
 const LineageGraph: React.FC = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [useLargeDataset, setUseLargeDataset] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  
+  const {
+    nodes,
+    setNodes,
+    edges,
+    setEdges,
+    useLargeDataset,
+    isLoading,
+    toggleDataset,
+    resetView
+  } = useLineageData();
+  
+  const [, setNodesState, onNodesChange] = useNodesState(nodes);
+  const [, setEdgesState, onEdgesChange] = useEdgesState(edges);
+  
+  // Update the state when nodes or edges change
+  React.useEffect(() => {
+    setNodesState(nodes);
+  }, [nodes, setNodesState]);
+  
+  React.useEffect(() => {
+    setEdgesState(edges);
+  }, [edges, setEdgesState]);
 
-  const reactFlowInstance = useReactFlow();
   const { handleSearch } = useLineageSearch(nodes, setNodes, setEdges);
   const { 
     selectedNode,
@@ -64,46 +59,6 @@ const LineageGraph: React.FC = () => {
     resetPanels
   } = useDetailsPanels();
   
-  const initialLayout = useCallback(() => {
-    setIsLoading(true);
-    
-    // Use setTimeout to allow the UI to update with the loading state
-    setTimeout(() => {
-      try {
-        const dataToUse = useLargeDataset ? mockLargeLineageData : mockLineageData;
-        console.log(`Loading ${dataToUse.nodes.length} nodes and ${dataToUse.edges.length} edges`);
-        
-        const { flowNodes, flowEdges } = calculateInitialLayout(
-          dataToUse.nodes,
-          dataToUse.edges
-        );
-        
-        setNodes(flowNodes);
-        setEdges(flowEdges);
-        
-        // Give more time for the layout to stabilize before fitting view
-        // Increase timeout for large dataset
-        const timeoutDuration = useLargeDataset ? 1000 : 300;
-        setTimeout(() => {
-          reactFlowInstance.fitView({ padding: 0.4, includeHiddenNodes: false });
-          setIsLoading(false);
-        }, timeoutDuration);
-      } catch (error) {
-        console.error('Error loading lineage data:', error);
-        toast({
-          title: 'Error loading data',
-          description: 'There was a problem loading the lineage data. Please try again.',
-          variant: 'destructive',
-        });
-        setIsLoading(false);
-      }
-    }, useLargeDataset ? 200 : 100); // Increased timeout for large dataset initialization
-  }, [reactFlowInstance, setEdges, setNodes, useLargeDataset, toast]);
-
-  useEffect(() => {
-    initialLayout();
-  }, [initialLayout, useLargeDataset]);
-
   const onConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) => 
@@ -127,98 +82,36 @@ const LineageGraph: React.FC = () => {
     handleSearch(searchQuery);
   }, [searchQuery, handleSearch]);
 
-  const resetView = useCallback(() => {
-    initialLayout();
+  const handleResetView = useCallback(() => {
+    resetView();
     setSearchQuery('');
     resetPanels();
-  }, [initialLayout, resetPanels]);
-
-  const toggleDataset = useCallback(() => {
-    if (!isLoading) {
-      setUseLargeDataset(prev => !prev);
-    } else {
-      toast({
-        title: 'Loading in progress',
-        description: 'Please wait for the current dataset to finish loading before switching.',
-      });
-    }
-  }, [isLoading, toast]);
+  }, [resetView, resetPanels]);
 
   return (
     <div className="w-full h-full relative">
-      {isLoading && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
-            <p className="text-sm text-muted-foreground">
-              Loading {useLargeDataset ? 'large' : 'small'} dataset...
-            </p>
-            {useLargeDataset && (
-              <p className="text-xs text-muted-foreground mt-1">
-                (200 nodes and ~400 edges - this may take a moment)
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+      <LoadingOverlay isVisible={isLoading} useLargeDataset={useLargeDataset} />
+      <DatasetToggle 
+        useLargeDataset={useLargeDataset} 
+        toggleDataset={toggleDataset} 
+        isLoading={isLoading} 
+      />
       
-      <div className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-sm border border-border">
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="dataset-toggle" 
-            checked={useLargeDataset} 
-            onCheckedChange={toggleDataset} 
-            disabled={isLoading}
-          />
-          <Label htmlFor="dataset-toggle">Use large dataset ({useLargeDataset ? '200 nodes' : 'small'})</Label>
-        </div>
-      </div>
-      
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={handleNodeClick}
-        onEdgeClick={handleEdgeClick}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-        minZoom={0.2}
-        maxZoom={2}
-        snapToGrid={true}
-        attributionPosition="bottom-right"
-        className="lineage-flow"
-      >
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-        <Controls className="glass-panel" />
-        <MiniMap
-          nodeColor={(node) => {
-            switch (node.data.type) {
-              case 'table':
-                return '#dbeafe';
-              case 'task':
-                return '#dcfce7';
-              case 'report':
-                return '#f3e8ff';
-              default:
-                return '#f1f5f9';
-            }
-          }}
-          maskColor="rgba(240, 240, 250, 0.1)"
-          className="glass-panel"
-        />
-        
-        <SearchPanel 
+      <ReactFlowProvider>
+        <FlowComponent
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          handleNodeClick={handleNodeClick}
+          handleEdgeClick={handleEdgeClick}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearchQuery}
+          resetView={handleResetView}
         />
-        
-        <ControlPanel resetView={resetView} />
-      </ReactFlow>
+      </ReactFlowProvider>
       
       <NodeDetailsPanel 
         node={selectedNode} 
