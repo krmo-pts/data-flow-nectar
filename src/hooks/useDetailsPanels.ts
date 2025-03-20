@@ -1,93 +1,64 @@
 
-import { useState, useCallback, useRef } from 'react';
-import { NodeData, EdgeData } from '@/types/lineage';
+import { useCallback } from 'react';
+import { useNodePanel } from './useNodePanel';
+import { useEdgePanel } from './useEdgePanel';
 
 export function useDetailsPanels() {
-  const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [selectedEdge, setSelectedEdge] = useState<EdgeData | null>(null);
-  const [isNodePanelOpen, setIsNodePanelOpen] = useState(false);
-  const [isEdgePanelOpen, setIsEdgePanelOpen] = useState(false);
+  // Use the node panel hook
+  const {
+    selectedNode,
+    isNodePanelOpen,
+    nodeOpenRef,
+    handleNodeClick,
+    handleCloseNodePanel,
+    resetNodePanel
+  } = useNodePanel();
   
-  // Use refs to track if panel is already open to prevent unnecessary re-renders
-  const nodeOpenRef = useRef(false);
-  const edgeOpenRef = useRef(false);
+  // Use the edge panel hook
+  const {
+    selectedEdge,
+    isEdgePanelOpen,
+    edgeOpenRef,
+    handleEdgeClick,
+    handleCloseEdgePanel,
+    resetEdgePanel
+  } = useEdgePanel();
 
-  const handleNodeClick = useCallback((_: React.MouseEvent, node: any) => {
-    // Skip work if clicking the same node when already open
-    if (nodeOpenRef.current && selectedNode?.id === node.id) return;
-    
-    // In a real application, you would fetch the node data from an API
-    // Here we're using the node data directly from the node object
-    const nodeData = node.data;
-    
-    // Close other panel first if open to avoid multiple animations running
+  // Function to handle node clicks that also closes edge panel
+  const handleNodeClickWithEdgeClose = useCallback((_: React.MouseEvent, node: any) => {
+    // Close edge panel first if open to avoid multiple animations running
     if (edgeOpenRef.current) {
-      setSelectedEdge(null);
-      setIsEdgePanelOpen(false);
-      edgeOpenRef.current = false;
+      resetEdgePanel();
     }
     
-    // Update node data and panel state
-    setSelectedNode(nodeData);
-    setIsNodePanelOpen(true);
-    nodeOpenRef.current = true;
-  }, [selectedNode?.id]);
+    // Now handle the node click
+    handleNodeClick(_, node);
+  }, [edgeOpenRef, resetEdgePanel, handleNodeClick]);
 
-  const handleEdgeClick = useCallback((_: React.MouseEvent, edge: any) => {
-    // Skip work if clicking the same edge when already open
-    if (edgeOpenRef.current && selectedEdge?.id === edge.id) return;
-    
-    // In a real application, you would fetch the edge data from an API
-    // Here we're using the edge data directly from the edge object
-    const edgeData = edge.data;
-    
-    // Close other panel first if open to avoid multiple animations running
+  // Function to handle edge clicks that also closes node panel
+  const handleEdgeClickWithNodeClose = useCallback((_: React.MouseEvent, edge: any) => {
+    // Close node panel first if open to avoid multiple animations running
     if (nodeOpenRef.current) {
-      setSelectedNode(null);
-      setIsNodePanelOpen(false);
-      nodeOpenRef.current = false;
+      resetNodePanel();
     }
     
-    // Update edge data and panel state
-    setSelectedEdge(edgeData);
-    setIsEdgePanelOpen(true);
-    edgeOpenRef.current = true;
-  }, [selectedEdge?.id]);
+    // Now handle the edge click
+    handleEdgeClick(_, edge);
+  }, [nodeOpenRef, resetNodePanel, handleEdgeClick]);
 
-  const handleCloseNodePanel = useCallback(() => {
-    setIsNodePanelOpen(false);
-    nodeOpenRef.current = false;
-    // Clear node data after animation completes
-    setTimeout(() => {
-      setSelectedNode(null);
-    }, 300);
-  }, []);
-
-  const handleCloseEdgePanel = useCallback(() => {
-    setIsEdgePanelOpen(false);
-    edgeOpenRef.current = false;
-    // Clear edge data after animation completes
-    setTimeout(() => {
-      setSelectedEdge(null);
-    }, 300);
-  }, []);
-
+  // Reset both panels
   const resetPanels = useCallback(() => {
-    setSelectedNode(null);
-    setSelectedEdge(null);
-    setIsNodePanelOpen(false);
-    setIsEdgePanelOpen(false);
-    nodeOpenRef.current = false;
-    edgeOpenRef.current = false;
-  }, []);
+    resetNodePanel();
+    resetEdgePanel();
+  }, [resetNodePanel, resetEdgePanel]);
 
   return {
     selectedNode,
     selectedEdge,
     isNodePanelOpen,
     isEdgePanelOpen,
-    handleNodeClick,
-    handleEdgeClick,
+    handleNodeClick: handleNodeClickWithEdgeClose,
+    handleEdgeClick: handleEdgeClickWithNodeClose,
     handleCloseNodePanel,
     handleCloseEdgePanel,
     resetPanels
